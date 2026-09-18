@@ -1,7 +1,7 @@
 package com.events.goup.controller;
 
-import com.events.goup.dto.CategoryRequest;
-import com.events.goup.dto.CategoryResponse;
+import com.events.goup.dto.category.CategoryRequest;
+import com.events.goup.dto.category.CategoryResponse;
 import com.events.goup.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,7 +1,7 @@
 package com.events.goup.service;
 
-import com.events.goup.dto.CategoryRequest;
-import com.events.goup.dto.CategoryResponse;
+import com.events.goup.dto.category.CategoryRequest;
+import com.events.goup.dto.category.CategoryResponse;
 import com.events.goup.entity.Category;
 import com.events.goup.exception.DuplicateNameException;
 import com.events.goup.exception.NotFoundException;
