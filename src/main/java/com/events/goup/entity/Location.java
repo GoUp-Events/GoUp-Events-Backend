@@ -1,7 +1,10 @@
 package com.events.goup.entity;
 
+import com.events.goup.entity.enums.PriceLevel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,35 +24,42 @@ public class Location {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "place_id", nullable = false, unique = true, length = 255)
+    private String placeId;
+
     @Column(nullable = false, length = 150)
     private String name;
 
-    @Column(nullable = false, length = 200)
+    @Column(name = "formatted_address", nullable = false, length = 255)
+    private String formattedAddress;
+
+    @Column(length = 200)
     private String address;
 
     @Column(length = 20)
     private String number;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String neighborhood;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String city;
 
-    @Column(nullable = false, length = 2)
+    @Column(length = 2)
     private String state;
 
-    @Column(nullable = false, length = 9)
+    @Column(length = 9)
     private String zip;
 
-    public Location(String name, String address, String number, String neighborhood,
-                    String city, String state, String zip) {
-        this.name = name;
-        this.address = address;
-        this.number = number;
-        this.neighborhood = neighborhood;
-        this.city = city;
-        this.state = state;
-        this.zip = zip;
-    }
+    @Column(nullable = false)
+    private Double latitude;
+
+    @Column(nullable = false)
+    private Double longitude;
+
+    private Double rating;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "price_level", length = 20)
+    private PriceLevel priceLevel;
 }
