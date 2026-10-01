@@ -35,8 +35,8 @@ public record EventRequest(
         @NotNull(message = "A classificação etária é obrigatória")
         AgeRating ageRating,
 
-        @NotNull(message = "O local é obrigatório")
-        Long locationId,
+        @NotBlank(message = "O local (placeId do Google) é obrigatório")
+        String placeId,
 
         Long categoryId
 ) {

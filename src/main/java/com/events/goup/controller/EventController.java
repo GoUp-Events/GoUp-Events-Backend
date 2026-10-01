@@ -2,6 +2,7 @@ package com.events.goup.controller;
 
 import com.events.goup.dto.event.EventRequest;
 import com.events.goup.dto.event.EventResponse;
+import com.events.goup.dto.place.NearbyPlaceResponse;
 import com.events.goup.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +33,14 @@ public class EventController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EventResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(eventService.findById(id));
+    public ResponseEntity<EventResponse> findById(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(eventService.findById(id, emailOf(authentication)));
+    }
+
+    @GetMapping("/{id}/nearby")
+    public ResponseEntity<List<NearbyPlaceResponse>> findNearbyPlaces(@PathVariable Long id,
+                                                                      Authentication authentication) {
+        return ResponseEntity.ok(eventService.findNearbyPlaces(id, emailOf(authentication)));
     }
 
     @PostMapping
@@ -54,5 +61,10 @@ public class EventController {
     public ResponseEntity<Void> delete(@PathVariable Long id, Authentication authentication) {
         eventService.delete(id, authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    // Rotas públicas: o visitante chega sem Authentication.
+    private String emailOf(Authentication authentication) {
+        return authentication != null ? authentication.getName() : null;
     }
 }

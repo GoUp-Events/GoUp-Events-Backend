@@ -1,5 +1,6 @@
 package com.events.goup.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -36,6 +38,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({InvalidCredentialsException.class, BadCredentialsException.class})
     public ResponseEntity<ApiError> handleInvalidCredentials(RuntimeException exception) {
         return build(HttpStatus.UNAUTHORIZED, "E-mail ou senha inválidos");
+    }
+
+    @ExceptionHandler(ExternalServiceException.class)
+    public ResponseEntity<ApiError> handleExternalService(ExternalServiceException exception) {
+        log.warn("Falha em serviço externo: {}", exception.getMessage(), exception.getCause());
+        return build(HttpStatus.BAD_GATEWAY, exception.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
