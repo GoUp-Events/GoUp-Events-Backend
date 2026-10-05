@@ -28,7 +28,8 @@ public class GooglePlacesClient {
             "id,displayName,formattedAddress,addressComponents,location,rating,priceLevel";
     private static final String NEARBY_FIELD_MASK =
             "places.id,places.displayName,places.formattedAddress,places.location,"
-                    + "places.primaryTypeDisplayName,places.googleMapsUri";
+                    + "places.primaryTypeDisplayName,places.googleMapsUri,"
+                    + "places.rating,places.userRatingCount,places.priceLevel";
 
     private final RestClient restClient;
     private final String apiKey;
@@ -71,12 +72,20 @@ public class GooglePlacesClient {
         }
     }
 
+    public List<String> getNearbyTypes() {
+        return nearbyTypes;
+    }
+
     /**
-     * Resultado é cacheado por placeId: os lugares ao redor de um local quase não mudam,
-     * e isso evita gastar cota da API a cada visualização do evento.
+     * Resultado é cacheado por placeId (e tipo, quando filtrado): os lugares ao redor de um local
+     * quase não mudam, e isso evita gastar cota da API a cada visualização do evento.
+     * Sempre busca a quantidade máxima entre os planos; o corte por plano é feito no service,
+     * então Free e Premium compartilham o mesmo cache e a mesma chamada ao Google.
+     *
+     * @param type tipo do Google (ex.: "bar"); null usa todos os tipos configurados
      */
-    @Cacheable(cacheNames = "nearbyPlaces", key = "#placeId")
-    public List<Place> searchNearby(String placeId, double latitude, double longitude, int maxResults) {
+    @Cacheable(cacheNames = "nearbyPlaces", key = "#placeId + ':' + (#type ?: 'all')")
+    public List<Place> searchNearby(String placeId, double latitude, double longitude, int maxResults, String type) {
         requireApiKey();
 
         Map<String, Object> body = new HashMap<>();
@@ -87,7 +96,9 @@ public class GooglePlacesClient {
         body.put("locationRestriction", Map.of("circle", Map.of(
                 "center", Map.of("latitude", latitude, "longitude", longitude),
                 "radius", nearbyRadiusMeters)));
-        if (!nearbyTypes.isEmpty()) {
+        if (type != null) {
+            body.put("includedTypes", List.of(type));
+        } else if (!nearbyTypes.isEmpty()) {
             body.put("includedTypes", nearbyTypes);
         }
 
@@ -140,7 +151,10 @@ public class GooglePlacesClient {
                         String formattedAddress,
                         LatLng location,
                         LocalizedText primaryTypeDisplayName,
-                        String googleMapsUri) {
+                        String googleMapsUri,
+                        Double rating,
+                        Integer userRatingCount,
+                        String priceLevel) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

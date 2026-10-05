@@ -23,6 +23,6 @@ public class UserService {
     }
 
     private UserResponse toResponse(User user) {
-        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole().name(), user.getCreatedAt());
+        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole().name(), user.isPremium(), user.getCreatedAt());
     }
 }

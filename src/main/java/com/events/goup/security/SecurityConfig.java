@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/locations/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/events/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/plans").permitAll()
                         .anyRequest().authenticated())
                 // Sem login -> 401 (o padrão do Spring seria 403, que reservamos para "sem permissão").
                 .exceptionHandling(exceptions -> exceptions
