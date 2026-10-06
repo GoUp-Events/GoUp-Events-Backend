@@ -38,6 +38,7 @@ public class AuthService {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setRole(Role.USER);
+        user.setPremium(false);
 
         User saved = userRepository.save(user);
         return buildAuthResponse(saved);
@@ -65,7 +66,7 @@ public class AuthService {
     }
 
     private UserResponse toResponse(User user) {
-        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole().name(), user.getCreatedAt());
+        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole().name(), user.isPremium(), user.getCreatedAt());
     }
 
     private String normalizeEmail(String email) {

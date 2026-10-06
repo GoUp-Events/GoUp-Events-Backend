@@ -23,8 +23,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Descoberta Mágica: o Gemini só escolhe entre eventos reais que o backend já filtrou.
- * Qualquer id devolvido fora da lista de candidatos é descartado.
+ * Descoberta Mágica (chatbot com IA, exclusivo Premium): o Gemini só escolhe entre eventos
+ * reais que o backend já filtrou. Qualquer id devolvido fora da lista de candidatos é descartado.
  */
 @Service
 public class DiscoveryService {
@@ -48,18 +48,24 @@ public class DiscoveryService {
 
     private final EventRepository eventRepository;
     private final GeminiClient geminiClient;
+    private final PlanService planService;
     private final int candidateLimit;
 
     public DiscoveryService(EventRepository eventRepository,
                             GeminiClient geminiClient,
+                            PlanService planService,
                             @Value("${goup.discovery.candidate-limit:20}") int candidateLimit) {
         this.eventRepository = eventRepository;
         this.geminiClient = geminiClient;
+        this.planService = planService;
         this.candidateLimit = candidateLimit;
     }
 
     @Transactional(readOnly = true)
-    public DiscoveryResponse discover(DiscoveryRequest request) {
+    public DiscoveryResponse discover(DiscoveryRequest request, String authenticatedEmail) {
+        // Verificado antes de qualquer consulta, para não gastar cota do Gemini com usuário Free.
+        planService.requirePremium(authenticatedEmail);
+
         String city = request.city() != null && !request.city().isBlank() ? request.city().trim() : null;
 
         List<Event> candidates = eventRepository.findDiscoveryCandidates(

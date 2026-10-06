@@ -33,6 +33,10 @@ public class User {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    // false = Free (padrão), true = Premium. Alterado apenas direto no banco; não há endpoint que mude este valor.
+    @Column(nullable = false, columnDefinition = "boolean not null default false")
+    private boolean premium = false;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

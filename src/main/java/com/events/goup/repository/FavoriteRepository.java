@@ -21,7 +21,16 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     @EntityGraph(attributePaths = {"event", "event.user", "event.location", "event.category"})
     List<Favorite> findAllByUserOrderByCreatedAtAsc(User user);
 
+    @Query("select f.event.id as eventId, count(f) as total from Favorite f group by f.event.id")
+    List<EventFavoriteCount> countGroupedByEvent();
+
     @Modifying
     @Query("delete from Favorite f where f.event = :event")
     void deleteAllByEvent(@Param("event") Event event);
+
+    interface EventFavoriteCount {
+        Long getEventId();
+
+        Long getTotal();
+    }
 }

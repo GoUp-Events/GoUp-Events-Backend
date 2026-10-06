@@ -1,11 +1,13 @@
 package com.events.goup.controller;
 
+import com.events.goup.dto.event.EventFilter;
 import com.events.goup.dto.event.EventRequest;
 import com.events.goup.dto.event.EventResponse;
 import com.events.goup.dto.place.NearbyPlaceResponse;
 import com.events.goup.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,9 +17,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -28,8 +33,17 @@ public class EventController {
     private final EventService eventService;
 
     @GetMapping
-    public ResponseEntity<List<EventResponse>> findAll() {
-        return ResponseEntity.ok(eventService.findAll());
+    public ResponseEntity<List<EventResponse>> findAll(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String sort,
+            Authentication authentication) {
+        EventFilter filter = new EventFilter(q, city, categoryId, dateFrom, dateTo, maxPrice, sort);
+        return ResponseEntity.ok(eventService.findAll(filter, emailOf(authentication)));
     }
 
     @GetMapping("/{id}")
@@ -39,8 +53,9 @@ public class EventController {
 
     @GetMapping("/{id}/nearby")
     public ResponseEntity<List<NearbyPlaceResponse>> findNearbyPlaces(@PathVariable Long id,
+                                                                      @RequestParam(required = false) String type,
                                                                       Authentication authentication) {
-        return ResponseEntity.ok(eventService.findNearbyPlaces(id, emailOf(authentication)));
+        return ResponseEntity.ok(eventService.findNearbyPlaces(id, type, emailOf(authentication)));
     }
 
     @PostMapping
