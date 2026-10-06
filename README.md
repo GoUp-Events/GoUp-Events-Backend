@@ -48,8 +48,11 @@ Na plataforma, as pessoas encontram o que fazer, publicam eventos, favoritam o q
 - **Locais via Google Places**: o local do evento vem do autocomplete do Google e é reaproveitado entre eventos.
 - **Categorias**: lista fixa, criada automaticamente.
 - **Favoritos**: o usuário salva os eventos que quer ir. É a versão simplificada do "roteiro".
-- **Descoberta Mágica**: o usuário descreve o que quer fazer e a IA (Gemini) sugere eventos reais.
-- **Locais próximos**: na tela do evento, mostra os 3 lugares mais próximos (restaurantes, bares, parques etc.).
+- **Pesquisa e filtros**: busca por texto, cidade, categoria, período e preço em `GET /events`.
+- **Descoberta Mágica** *(Premium)*: chatbot em que o usuário descreve o que quer fazer e a IA (Gemini) sugere eventos reais.
+- **Locais próximos**: na tela do evento, mostra os lugares mais próximos (restaurantes, bares, parques etc.) com distância, preço e avaliação. Free vê 3; Premium vê até 10 e pode filtrar por tipo de lugar.
+- **Recomendações personalizadas** *(Premium)*: eventos sugeridos a partir dos favoritos do usuário.
+- **Planos Free e Premium**: definidos pelo atributo `premium` do usuário. Veja [Planos](#planos-free-e-premium).
 
 ---
 
@@ -107,6 +110,8 @@ As configurações ficam em `src/main/resources/application.properties`.
 | `goup.gemini.api-key` | env `GEMINI_API_KEY` | Chave do Gemini |
 | `goup.gemini.model` | `gemini-2.5-flash` | Modelo do Gemini usado |
 | `goup.discovery.candidate-limit` | `20` | Máximo de eventos enviados ao Gemini por busca |
+| `goup.plans.free.nearby-limit` | `3` | Locais próximos exibidos para o Free (e visitantes) |
+| `goup.plans.premium.nearby-limit` | `10` | Locais próximos exibidos para o Premium (máx. 19) |
 
 O schema do banco é gerado pelo Hibernate (`ddl-auto=update`). As categorias são inseridas automaticamente ao iniciar.
 
@@ -140,7 +145,7 @@ User 1───* Favorite *───1 Event      (par user/event único)
 
 | Entidade | Campos principais |
 |---|---|
-| **User** | `name`, `email` (único), `password` (BCrypt), `role` (`USER`/`ADMIN`), `createdAt` |
+| **User** | `name`, `email` (único), `password` (BCrypt), `role` (`USER`/`ADMIN`), `premium` (padrão `false`), `createdAt` |
 | **Event** | `title`, `description`, `eventDate`, `startTime`, `endTime`, `price`, `status`, `ageRating`, `user`, `location`, `category` |
 | **Location** | `placeId` (único), `name`, `formattedAddress`, `address`, `number`, `neighborhood`, `city`, `state`, `zip`, `latitude`, `longitude`, `rating`, `priceLevel` |
 | **Category** | `name` (único), `description` |
@@ -171,11 +176,19 @@ Todo usuário cadastrado começa como `USER`. Para tornar um usuário `ADMIN`, a
 UPDATE users SET role = 'ADMIN' WHERE email = 'admin@exemplo.com';
 ```
 
+Todo usuário também começa como **Free** (`premium = false`). Para tornar um usuário **Premium**, altere direto no banco (não existe endpoint para isso):
+
+```sql
+UPDATE users SET premium = true WHERE email = 'usuariopremium@gmail.com';
+```
+
+A mudança vale já na próxima requisição, sem precisar fazer login de novo: o backend lê `premium` do banco a cada chamada, a partir do e-mail do token. O valor nunca vem do frontend.
+
 ---
 
 ## Endpoints
 
-🌐 = público · 🔒 = exige login
+🌐 = público · 🔒 = exige login · ⭐ = exige login com `premium = true` (Free recebe 403)
 
 ### Auth
 
@@ -188,17 +201,18 @@ UPDATE users SET role = 'ADMIN' WHERE email = 'admin@exemplo.com';
 
 | Método | Rota | Acesso | Descrição |
 |---|---|---|---|
-| `GET` | `/users/me` | 🔒 | Dados do usuário logado |
+| `GET` | `/users/me` | 🔒 | Dados do usuário logado (inclui `premium`) |
 | `GET` | `/users/me/events` | 🔒 | Eventos criados pelo usuário (inclui rascunhos) |
 | `GET` | `/users/me/favorites` | 🔒 | Favoritos, na ordem em que foram adicionados |
+| `GET` | `/users/me/recommendations` | ⭐ | Recomendações personalizadas |
 
 ### Eventos
 
 | Método | Rota | Acesso | Descrição |
 |---|---|---|---|
-| `GET` | `/events` | 🌐 | Lista eventos (rascunhos não aparecem) |
+| `GET` | `/events` | 🌐 | Lista e pesquisa eventos (rascunhos não aparecem). Filtros abaixo |
 | `GET` | `/events/{id}` | 🌐 | Detalhe do evento |
-| `GET` | `/events/{id}/nearby` | 🌐 | Os 3 lugares mais próximos do evento |
+| `GET` | `/events/{id}/nearby` | 🌐 | Lugares próximos do evento: 3 no Free, até 10 no Premium. `?type=` é ⭐ |
 | `POST` | `/events` | 🔒 | Cria evento |
 | `PUT` | `/events/{id}` | 🔒 | Edita evento (dono ou ADMIN) |
 | `DELETE` | `/events/{id}` | 🔒 | Exclui evento (dono ou ADMIN) |
@@ -220,11 +234,30 @@ UPDATE users SET role = 'ADMIN' WHERE email = 'admin@exemplo.com';
 | `GET` | `/categories` | 🌐 | Lista categorias |
 | `GET` | `/categories/{id}` | 🌐 | Detalhe da categoria |
 
+### Planos
+
+| Método | Rota | Acesso | Descrição |
+|---|---|---|---|
+| `GET` | `/plans` | 🌐 | Free e Premium com benefícios e limites (tela "Evoluir plano") |
+
 ### Descoberta Mágica
 
 | Método | Rota | Acesso | Descrição |
 |---|---|---|---|
-| `POST` | `/discovery` | 🔒 | Sugestão de eventos pela IA |
+| `POST` | `/discovery` | ⭐ | Sugestão de eventos pela IA (chatbot) |
+
+### Filtros de `GET /events`
+
+Todos são opcionais e funcionam do mesmo jeito para Free e Premium.
+
+| Parâmetro | Exemplo | Descrição |
+|---|---|---|
+| `q` | `festa` | Texto no título ou na descrição |
+| `city` | `Blumenau` | Cidade do local (sem diferenciar maiúsculas) |
+| `categoryId` | `12` | Categoria |
+| `dateFrom` / `dateTo` | `2026-10-01` | Período (`yyyy-MM-dd`) |
+| `maxPrice` | `0` | Preço máximo (`0` = só gratuitos) |
+| `sort` | `popular` | `date` (padrão) ou `popular` (mais favoritados, ⭐) |
 
 ---
 
@@ -336,9 +369,30 @@ GET /events/1/nearby
     "latitude": -26.9160,
     "longitude": -49.0861,
     "distanceMeters": 52,
+    "rating": 4.6,
+    "userRatingCount": 312,
+    "priceLevel": "INEXPENSIVE",
     "googleMapsUri": "https://maps.google.com/?cid=..."
   }
 ]
+```
+
+Premium filtrando por tipo (`restaurant`, `cafe`, `bar`, `bakery`, `tourist_attraction` ou `park`, conforme `goup.google.places.nearby-types`):
+
+```http
+GET /events/1/nearby?type=bar
+Authorization: Bearer <token>
+```
+
+### Recomendações (Premium)
+
+```http
+GET /users/me/recommendations
+Authorization: Bearer <token>
+```
+
+```json
+[ { "reason": "Porque você favoritou eventos de Festas Típicas", "event": { "id": 1, "title": "Oktoberfest Blumenau", "...": "..." } } ]
 ```
 
 ### Descoberta Mágica
@@ -384,6 +438,24 @@ GET    /users/me/favorites     → [ { "favoritedAt": "...", "event": { ... } } 
 - O visitante (sem login) pode listar e ver eventos, ver categorias, ver locais e ver locais próximos.
 - Exigem login: criar, editar e excluir eventos, favoritar, `/users/me/**`, resolver locais e a Descoberta Mágica.
 
+### Planos (Free e Premium)
+- O plano é só o atributo booleano `premium` do usuário. Não há tabela nem entidade de plano.
+- Novos usuários são Free. Premium é definido direto no banco; não existe endpoint de compra nem de troca de plano. A tela de pagamento do frontend é apenas demonstrativa.
+- Free e Premium usam **as mesmas rotas e telas**. O backend identifica o usuário pelo token, lê `premium` no banco e aplica a regra:
+
+| Recurso | Free / visitante | Premium |
+|---|---|---|
+| Pesquisa e filtros de eventos | ✅ | ✅ |
+| Locais próximos (`/events/{id}/nearby`) | até 3 | até 10 |
+| Distância, preço e avaliação dos locais | ✅ | ✅ |
+| Filtro por tipo de lugar (`?type=`) | 403 | ✅ |
+| Eventos em alta (`?sort=popular`) | 403 | ✅ |
+| Descoberta Mágica (`POST /discovery`) | 403 | ✅ |
+| Recomendações (`/users/me/recommendations`) | 403 | ✅ |
+
+- Recurso exclusivo acessado por Free responde **403** com a mensagem `"Recurso exclusivo do GoUp Premium"`. Esconder o botão no frontend não é a proteção: a verificação é feita no backend.
+- A regra é sempre `premium = true`, nunca um e-mail específico.
+
 ### Eventos
 - Status padrão: `DRAFT` (rascunho).
 - Rascunhos não aparecem na listagem pública. Só o dono e o ADMIN conseguem abri-los; para os demais, a resposta é 404.
@@ -409,11 +481,20 @@ GET    /users/me/favorites     → [ { "favoritedAt": "...", "event": { ... } } 
 3. O Gemini responde `{ eventIds, summary }` em JSON.
 4. Qualquer id fora da lista de candidatos é descartado. A IA nunca devolve evento inventado.
 5. Se não houver candidatos, o Gemini não é chamado.
+6. Exclusiva do Premium: a verificação acontece antes de qualquer chamada ao Gemini.
+
+### Recomendações personalizadas
+- Exclusivas do Premium.
+- Consideram eventos `PUBLISHED` de hoje em diante, sem os já favoritados e sem os criados pelo próprio usuário.
+- Pontuação: categorias que o usuário mais favorita pesam mais, depois as cidades. Empates seguem a data. Sem favoritos, viram os próximos eventos da agenda.
+- Até 10 eventos, cada um com o motivo da recomendação.
 
 ### Locais próximos
-- Retorna no máximo **3** lugares, de propósito, para economizar a cota gratuita do Google Places.
+- Free (e visitante) recebe no máximo **3** lugares; Premium recebe até **10**. Os limites são configuráveis.
+- O backend faz uma única busca no Google com o limite do Premium e corta conforme o plano, então os dois planos compartilham o mesmo cache e a mesma chamada.
+- Cada lugar vem com distância, avaliação, número de avaliações e faixa de preço (quando o Google informa).
 - O próprio local do evento é excluído do resultado.
-- O resultado é guardado em cache por local enquanto a aplicação está rodando.
+- O resultado é guardado em cache por local (e tipo, quando filtrado) enquanto a aplicação está rodando.
 
 ---
 
@@ -434,7 +515,7 @@ Os erros tratados pela API seguem o formato abaixo. As exceções são o `401` d
 |---|---|
 | `400` | Dados inválidos ou regra violada (ex.: término antes do início) |
 | `401` | Sem login, token inválido ou credenciais erradas |
-| `403` | Logado, mas sem permissão (ex.: editar evento de outro usuário) |
+| `403` | Logado, mas sem permissão (ex.: editar evento de outro usuário ou usar recurso Premium sendo Free) |
 | `404` | Recurso não encontrado |
 | `405` | Método HTTP não suportado na rota |
 | `409` | Conflito (ex.: e-mail já cadastrado) |
@@ -474,5 +555,5 @@ Usada na Descoberta Mágica.
 - [ ] Documentar a API com OpenAPI/Swagger
 - [ ] Mover o segredo do JWT e as credenciais do banco para variáveis de ambiente
 - [ ] Usar migrations com Flyway no lugar de `ddl-auto=update`
-- [ ] Paginação e filtros (cidade, data, categoria) em `GET /events`
+- [ ] Paginação em `GET /events`
 - [ ] Dockerfile e `docker-compose` para subir a API junto com o MySQL
