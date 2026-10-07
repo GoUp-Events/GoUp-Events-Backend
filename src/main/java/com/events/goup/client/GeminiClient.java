@@ -4,12 +4,14 @@ import com.events.goup.exception.ExternalServiceException;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -18,8 +20,9 @@ import java.util.Map;
  */
 @Component
 public class GeminiClient {
-
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
     private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(20);
 
     private static final Map<String, Object> RESPONSE_SCHEMA = Map.of(
             "type", "OBJECT",
@@ -36,7 +39,10 @@ public class GeminiClient {
     public GeminiClient(JsonMapper jsonMapper,
                         @Value("${goup.gemini.api-key:}") String apiKey,
                         @Value("${goup.gemini.model:gemini-2.5-flash}") String model) {
-        this.restClient = RestClient.builder().baseUrl(BASE_URL).build();
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(CONNECT_TIMEOUT);
+        requestFactory.setReadTimeout(READ_TIMEOUT);
+        this.restClient = RestClient.builder().baseUrl(BASE_URL).requestFactory(requestFactory).build();
         this.jsonMapper = jsonMapper;
         this.apiKey = apiKey;
         this.model = model;

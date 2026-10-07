@@ -68,8 +68,11 @@ public class DiscoveryService {
 
         String city = request.city() != null && !request.city().isBlank() ? request.city().trim() : null;
 
+        // A comparação no banco ignora maiúsculas ("blumenau" acha "Blumenau"); a mensagem mantém o texto original.
+        String cityFilter = city != null ? city.toLowerCase() : null;
+
         List<Event> candidates = eventRepository.findDiscoveryCandidates(
-                EventStatus.PUBLISHED, LocalDate.now(ZONE), city, PageRequest.of(0, candidateLimit));
+                EventStatus.PUBLISHED, LocalDate.now(ZONE), cityFilter, PageRequest.of(0, candidateLimit));
 
         if (candidates.isEmpty()) {
             String where = city != null ? " em " + city : "";
