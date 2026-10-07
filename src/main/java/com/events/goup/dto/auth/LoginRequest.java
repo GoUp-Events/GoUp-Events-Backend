@@ -1,4 +1,12 @@
 package com.events.goup.dto.auth;
 
-public record LoginRequest(String email, String password) {
+import jakarta.validation.constraints.NotBlank;
+
+public record LoginRequest(
+        @NotBlank(message = "O e-mail é obrigatório")
+        String email,
+
+        @NotBlank(message = "A senha é obrigatória")
+        String password
+) {
 }

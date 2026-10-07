@@ -6,11 +6,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +26,8 @@ import java.util.Map;
 public class GooglePlacesClient {
 
     private static final String BASE_URL = "https://places.googleapis.com/v1";
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(8);
     private static final String DETAILS_FIELD_MASK =
             "id,displayName,formattedAddress,addressComponents,location,rating,priceLevel";
     private static final String NEARBY_FIELD_MASK =
@@ -39,7 +43,10 @@ public class GooglePlacesClient {
     public GooglePlacesClient(@Value("${goup.google.places.api-key:}") String apiKey,
                               @Value("${goup.google.places.nearby-radius-meters:1500}") double nearbyRadiusMeters,
                               @Value("${goup.google.places.nearby-types:}") String nearbyTypes) {
-        this.restClient = RestClient.builder().baseUrl(BASE_URL).build();
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(CONNECT_TIMEOUT);
+        requestFactory.setReadTimeout(READ_TIMEOUT);
+        this.restClient = RestClient.builder().baseUrl(BASE_URL).requestFactory(requestFactory).build();
         this.apiKey = apiKey;
         this.nearbyRadiusMeters = nearbyRadiusMeters;
         this.nearbyTypes = Arrays.stream(nearbyTypes.split(","))
@@ -66,7 +73,11 @@ public class GooglePlacesClient {
             }
             return details;
         } catch (HttpClientErrorException exception) {
-            throw new NotFoundException("Local não encontrado no Google Places: " + placeId);
+            int statusCode = exception.getStatusCode().value();
+            if (statusCode == 400 || statusCode == 404) {
+                throw new NotFoundException("Local não encontrado no Google Places: " + placeId);
+            }
+            throw new ExternalServiceException("Falha ao consultar o Google Places (HTTP " + statusCode + ")", exception);
         } catch (RestClientException exception) {
             throw new ExternalServiceException("Falha ao consultar o Google Places", exception);
         }

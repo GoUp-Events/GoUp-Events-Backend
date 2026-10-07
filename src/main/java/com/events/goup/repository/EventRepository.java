@@ -1,5 +1,6 @@
 package com.events.goup.repository;
 
+
 import com.events.goup.entity.Event;
 import com.events.goup.entity.User;
 import com.events.goup.entity.enums.EventStatus;
@@ -44,12 +45,13 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("select e from Event e where e.id = :id")
     Optional<Event> findWithDetailsById(@Param("id") Long id);
 
+    // city já deve chegar em minúsculas (mesmo padrão da busca em search).
     @EntityGraph(attributePaths = {"user", "location", "category"})
     @Query("""
             select e from Event e
             where e.status = :status
               and e.eventDate >= :fromDate
-              and (:city is null or e.location.city = :city)
+              and (:city is null or lower(e.location.city) = :city)
             order by e.eventDate asc, e.startTime asc
             """)
     List<Event> findDiscoveryCandidates(@Param("status") EventStatus status,
