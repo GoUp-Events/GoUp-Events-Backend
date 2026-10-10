@@ -134,7 +134,7 @@ class AuthIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.errors[0].field").value("password"));
     }
 
-    // ---------- login ----------
+    // --------- login ---------
 
     @Test
     @DisplayName("login com credenciais corretas devolve token e dados do usuário")
