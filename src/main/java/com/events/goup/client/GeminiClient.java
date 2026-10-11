@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import tools.jackson.core.JacksonException;
@@ -38,7 +39,7 @@ public class GeminiClient {
 
     public GeminiClient(JsonMapper jsonMapper,
                         @Value("${goup.gemini.api-key:}") String apiKey,
-                        @Value("${goup.gemini.model:gemini-2.5-flash}") String model) {
+                        @Value("${goup.gemini.model:gemini-3.6-flash}") String model) {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(CONNECT_TIMEOUT);
         requestFactory.setReadTimeout(READ_TIMEOUT);
@@ -70,8 +71,18 @@ public class GeminiClient {
                     .body(body)
                     .retrieve()
                     .body(GenerateContentResponse.class);
+        } catch (HttpClientErrorException exception) {
+            int status = exception.getStatusCode().value();
+            String message = switch (status) {
+                case 403 -> "Falha ao consultar o Gemini (HTTP 403): chave sem permissão";
+                case 404 -> "Falha ao consultar o Gemini (HTTP 404): modelo inexistente ou indisponível para esta chave; confira GEMINI_MODEL";
+                case 429 -> "Falha ao consultar o Gemini (HTTP 429): cota excedida";
+                case 401 -> "Falha ao consultar o Gemini (HTTP 401): chave inválida";
+                default -> "Falha ao consultar o Gemini (HTTP " + status + ")";
+            };
+            throw new ExternalServiceException(message);
         } catch (RestClientException exception) {
-            throw new ExternalServiceException("Falha ao consultar o Gemini", exception);
+            throw new ExternalServiceException("Falha ao consultar o Gemini");
         }
 
         String text = extractText(response);

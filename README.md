@@ -115,7 +115,7 @@ As configurações ficam em `src/main/resources/application.properties`.
 | `goup.google.places.nearby-radius-meters` | `1500`                                               | Raio da busca de locais próximos                    |
 | `goup.google.places.nearby-types`         | `restaurant,cafe,bar,bakery,tourist_attraction,park` | Tipos de lugar buscados como "próximos"             |
 | `goup.gemini.api-key`                     | env `GEMINI_API_KEY`                                 | Chave do Gemini                                     |
-| `goup.gemini.model`                       | `gemini-2.5-flash`                                   | Modelo do Gemini usado                              |
+| `goup.gemini.model`                       | env `GEMINI_MODEL` (padrão: `gemini-3.6-flash`)      | Modelo do Gemini usado                              |
 | `goup.discovery.candidate-limit`          | `20`                                                 | Máximo de eventos enviados ao Gemini por busca      |
 | `goup.plans.free.nearby-limit`            | `3`                                                  | Locais próximos exibidos para o Free (e visitantes) |
 | `goup.plans.premium.nearby-limit`         | `10`                                                 | Locais próximos exibidos para o Premium (máx. 19)   |
