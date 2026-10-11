@@ -73,6 +73,7 @@ public class GeminiClient {
                     .body(GenerateContentResponse.class);
         } catch (HttpClientErrorException exception) {
             int status = exception.getStatusCode().value();
+<<<<<<< HEAD
             String message = switch (status) {
                 case 403 -> "Falha ao consultar o Gemini (HTTP 403): chave sem permissão";
                 case 404 -> "Falha ao consultar o Gemini (HTTP 404): modelo inexistente ou indisponível para esta chave; confira GEMINI_MODEL";
@@ -81,6 +82,16 @@ public class GeminiClient {
                 default -> "Falha ao consultar o Gemini (HTTP " + status + ")";
             };
             throw new ExternalServiceException(message);
+=======
+            if (status == 401 || status == 403 || (status == 400
+                    && exception.getResponseBodyAsString().contains("API_KEY_INVALID"))) {
+                throw new ExternalServiceException("Chave do Gemini inválida ou sem permissão; verifique GEMINI_API_KEY", exception);
+            }
+            if (status == 429) {
+                throw new ExternalServiceException("Limite de uso do Gemini atingido; tente novamente mais tarde", exception);
+            }
+            throw new ExternalServiceException("Falha ao consultar o Gemini (HTTP " + status + ")", exception);
+>>>>>>> 741de2bd8a04a46cfd61542f96267e848df91ffa
         } catch (RestClientException exception) {
             throw new ExternalServiceException("Falha ao consultar o Gemini");
         }
