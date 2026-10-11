@@ -2,6 +2,7 @@ package com.events.goup.dto.event;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Filtros de GET /events. Todos são opcionais.
@@ -15,6 +16,9 @@ public record EventFilter(
         LocalDate dateFrom,
         LocalDate dateTo,
         BigDecimal maxPrice,
-        String sort
+        String sort,
+        List<Long> categoryIds,
+        Boolean freeOnly,
+        String ageRating
 ) {
 }

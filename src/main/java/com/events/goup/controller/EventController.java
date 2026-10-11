@@ -41,8 +41,19 @@ public class EventController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) String sort,
+            @RequestParam(required = false) List<Long> categoryIds,
+            @RequestParam(required = false) String freeOnly,
+            @RequestParam(required = false) String ageRating,
             Authentication authentication) {
-        EventFilter filter = new EventFilter(q, city, categoryId, dateFrom, dateTo, maxPrice, sort);
+        Boolean onlyFree = null;
+        if (freeOnly != null) {
+            if (!freeOnly.equalsIgnoreCase("true") && !freeOnly.equalsIgnoreCase("false")) {
+                throw new IllegalArgumentException("O parâmetro freeOnly deve ser true ou false");
+            }
+            onlyFree = Boolean.parseBoolean(freeOnly);
+        }
+        EventFilter filter = new EventFilter(q, city, categoryId, dateFrom, dateTo, maxPrice, sort,
+                categoryIds, onlyFree, ageRating);
         return ResponseEntity.ok(eventService.findAll(filter, emailOf(authentication)));
     }
 

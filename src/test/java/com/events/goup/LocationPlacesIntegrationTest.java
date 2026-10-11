@@ -4,6 +4,7 @@ import com.events.goup.entity.Location;
 import com.events.goup.entity.User;
 import com.events.goup.exception.ExternalServiceException;
 import com.events.goup.exception.NotFoundException;
+import com.events.goup.client.GooglePlacesClient.PlaceSuggestion;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import java.util.List;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -37,6 +39,33 @@ class LocationPlacesIntegrationTest extends MockedApisTestBase {
         return """
                 {"placeId":"%s"}
                 """.formatted(placeId);
+    }
+
+    @Test
+    @DisplayName("autocomplete exige login, ignora texto curto e devolve sugestões")
+    void autocomplete_accessAndResults() throws Exception {
+        perform(get("/locations/autocomplete").param("q", "Vila"))
+                .andExpect(status().isUnauthorized());
+        perform(get("/locations/autocomplete").header("Authorization", bearer(user)).param("q", " Vi "))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
+        verify(googlePlacesClient, never()).autocomplete(anyString());
+
+        when(googlePlacesClient.autocomplete("Vila"))
+                .thenReturn(List.of(new PlaceSuggestion("place-vila", "Vila Germânica", "Blumenau - SC")));
+        perform(get("/locations/autocomplete").header("Authorization", bearer(user)).param("q", " Vila "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].placeId").value("place-vila"))
+                .andExpect(jsonPath("$[0].name").value("Vila Germânica"))
+                .andExpect(jsonPath("$[0].address").value("Blumenau - SC"));
+    }
+
+    @Test
+    @DisplayName("falha do Google no autocomplete devolve 502")
+    void autocomplete_googleDown() throws Exception {
+        when(googlePlacesClient.autocomplete("Vila"))
+                .thenThrow(new ExternalServiceException("Falha ao buscar locais no Google Places"));
+        perform(get("/locations/autocomplete").header("Authorization", bearer(user)).param("q", "Vila"))
+                .andExpect(status().isBadGateway());
     }
 
     @Test

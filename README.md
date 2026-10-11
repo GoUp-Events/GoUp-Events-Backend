@@ -106,10 +106,11 @@ As configurações ficam em `src/main/resources/application.properties`.
 
 | Propriedade                               | Padrão                                               | Descrição                                           |
 |-------------------------------------------|------------------------------------------------------|-----------------------------------------------------|
-| `spring.datasource.url`                   | `jdbc:mysql://localhost:3306/goup_events...`         | Conexão com o MySQL                                 |
-| `spring.datasource.username` / `password` | `root` / `root`                                      | Credenciais do banco                                |
-| `goup.jwt.secret`                         | —                                                    | Segredo de assinatura do JWT                        |
-| `goup.jwt.expiration-ms`                  | —                                                    | Validade do token em milissegundos                  |
+| `spring.datasource.url`                   | env `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`         | Conexão com o MySQL                                 |
+| `spring.datasource.username` / `password` | env `MYSQLUSER` / `MYSQLPASSWORD`                     | Credenciais do banco                                |
+| `goup.jwt.secret`                         | env `GOUP_JWT_SECRET`                                 | Segredo de assinatura do JWT                        |
+| `goup.jwt.expiration-ms`                  | env `GOUP_JWT_EXPIRATION_MS` (padrão `7200000`)       | Validade do token em milissegundos                  |
+| `goup.cors.allowed-origins`               | env `GOUP_CORS_ORIGINS` (padrão: site publicado e localhost nas portas 5173 e 3000) | Origens CORS permitidas |
 | `goup.google.places.api-key`              | env `GOOGLE_PLACES_API_KEY`                          | Chave do Google Places                              |
 | `goup.google.places.nearby-radius-meters` | `1500`                                               | Raio da busca de locais próximos                    |
 | `goup.google.places.nearby-types`         | `restaurant,cafe,bar,bakery,tourist_attraction,park` | Tipos de lugar buscados como "próximos"             |
@@ -235,6 +236,7 @@ chamada, a partir do e-mail do token. O valor nunca vem do frontend.
 | `GET`  | `/locations`      | 🌐     | Lista locais                                          |
 | `GET`  | `/locations/{id}` | 🌐     | Detalhe do local                                      |
 | `POST` | `/locations`      | 🔒     | Resolve um `placeId` do Google (salva ou reaproveita) |
+| `GET`  | `/locations/autocomplete?q=...` | 🔒 | Busca até 5 sugestões de locais pelo nome |
 
 ### Categorias
 
@@ -264,9 +266,55 @@ Todos são opcionais e funcionam do mesmo jeito para Free e Premium.
 | `q`                   | `festa`      | Texto no título ou na descrição                    |
 | `city`                | `Blumenau`   | Cidade do local (sem diferenciar maiúsculas)       |
 | `categoryId`          | `12`         | Categoria                                          |
+| `categoryIds`         | `12,13` ou `categoryIds=12&categoryIds=13` | Várias categorias; combinável com `categoryId` |
 | `dateFrom` / `dateTo` | `2026-10-01` | Período (`yyyy-MM-dd`)                             |
 | `maxPrice`            | `0`          | Preço máximo (`0` = só gratuitos)                  |
+| `freeOnly`            | `true`       | Apenas eventos com preço zero (`false` não filtra) |
+| `ageRating`           | `FREE`       | Classificação exata: `FREE`, `TEN`, `TWELVE`, `FOURTEEN`, `SIXTEEN`, `EIGHTEEN` |
 | `sort`                | `popular`    | `date` (padrão) ou `popular` (mais favoritados, ⭐) |
+
+Sem parâmetros, `GET /events` mantém a lista e a ordenação atuais. Os filtros podem ser combinados. Datas invertidas, IDs e preços negativos, classificação, ordenação ou `freeOnly` inválidos retornam 400.
+
+```http
+GET /events?q=festival&city=Blumenau&categoryIds=1,2&dateFrom=2026-10-01&dateTo=2026-10-31&freeOnly=true&ageRating=FREE&sort=date
+```
+
+```json
+[
+  {
+    "id": 1,
+    "title": "Festival gratuito",
+    "description": "Música ao vivo",
+    "eventDate": "2026-10-20",
+    "startTime": "18:00:00",
+    "endTime": "22:00:00",
+    "price": 0,
+    "status": "PUBLISHED",
+    "ageRating": "FREE",
+    "user": { "id": 1, "name": "Ana" },
+    "location": { "id": 1, "placeId": "ChIJ...", "name": "Parque Vila Germânica", "formattedAddress": "Blumenau - SC", "address": null, "number": null, "neighborhood": null, "city": "Blumenau", "state": "SC", "zip": null, "latitude": -26.9194, "longitude": -49.0661, "rating": null, "priceLevel": null },
+    "category": { "id": 1, "name": "Música", "description": null }
+  }
+]
+```
+
+### Autocomplete de locais
+
+Envie o JWT e pelo menos 3 caracteres em `q`. Textos menores retornam `[]` sem consulta ao Google. O front exibe `name` e `address` e envia o `placeId` escolhido no fluxo atual de `POST /locations` ou `POST /events`.
+
+```http
+GET /locations/autocomplete?q=Vila%20Germ%C3%A2nica
+Authorization: Bearer <token>
+```
+
+```json
+[
+  { "placeId": "ChIJ...", "name": "Parque Vila Germânica", "address": "Velha, Blumenau - SC, Brasil" }
+]
+```
+
+A busca usa Places API (New), português do Brasil e viés de 50 km em Blumenau. O viés não exclui locais fora da área. Erros do Google ou falta de chave retornam 502.
+Ao mostrar sugestões sem mapa, o frontend deve exibir a atribuição exigida pelo Google Places.
 
 ---
 
@@ -300,7 +348,7 @@ Content-Type: application/json
 
 ### Criar evento
 
-O `placeId` vem do autocomplete do Google Places no frontend.
+O `placeId` vem de `GET /locations/autocomplete`, usando a chave do Google somente no backend.
 
 ```http
 POST /events
@@ -588,6 +636,7 @@ corpo, e o `405`, que usa o formato padrão do Spring.
 
 Usada para:
 
+- buscar sugestões de locais (**Autocomplete**);
 - buscar os dados do local a partir do `placeId` (**Place Details**);
 - buscar os locais próximos (**Nearby Search**).
 
@@ -595,8 +644,7 @@ Para configurar:
 
 1. No [Google Cloud Console](https://console.cloud.google.com/), crie um projeto e ative a **Places API (New)**.
 2. Crie uma chave de API e defina a variável `GOOGLE_PLACES_API_KEY`.
-3. No frontend, use o autocomplete do Google Places, que pode usar outra chave restrita ao domínio, e mande o `placeId`
-   escolhido.
+3. No frontend, chame `GET /locations/autocomplete` com JWT e envie o `placeId` escolhido. A chave permanece no backend.
 
 > As chamadas usam *field mask* e pedem só os campos necessários, para reduzir o custo.
 
@@ -612,10 +660,10 @@ Usada na Descoberta Mágica.
 
 ## Próximos passos
 
-- [ ] Configurar CORS para o frontend
+- [x] Configurar CORS para o frontend
 - [ ] Escrever testes automatizados (services e controllers)
 - [ ] Documentar a API com OpenAPI/Swagger
-- [ ] Mover o segredo do JWT e as credenciais do banco para variáveis de ambiente
+- [x] Mover o segredo do JWT e as credenciais do banco para variáveis de ambiente
 - [ ] Usar migrations com Flyway no lugar de `ddl-auto=update`
 - [ ] Paginação em `GET /events`
 - [ ] Dockerfile e `docker-compose` para subir a API junto com o MySQL

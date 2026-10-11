@@ -11,6 +11,7 @@ import com.events.goup.entity.Event;
 import com.events.goup.entity.Location;
 import com.events.goup.entity.User;
 import com.events.goup.entity.enums.EventStatus;
+import com.events.goup.entity.enums.AgeRating;
 import com.events.goup.entity.enums.PriceLevel;
 import com.events.goup.entity.enums.Role;
 import com.events.goup.exception.ForbiddenException;
@@ -28,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -64,15 +66,36 @@ public class EventService {
         if (filter.dateFrom() != null && filter.dateTo() != null && filter.dateTo().isBefore(filter.dateFrom())) {
             throw new IllegalArgumentException("A data final não pode ser anterior à data inicial");
         }
+        if (filter.categoryId() != null && filter.categoryId() <= 0) {
+            throw new IllegalArgumentException("categoryId deve ser um número positivo");
+        }
+        if (filter.categoryIds() != null && filter.categoryIds().stream().anyMatch(id -> id == null || id <= 0)) {
+            throw new IllegalArgumentException("categoryIds deve conter apenas números positivos");
+        }
+        if (filter.maxPrice() != null && filter.maxPrice().signum() < 0) {
+            throw new IllegalArgumentException("maxPrice não pode ser negativo");
+        }
+        AgeRating ageRating = null;
+        if (filter.ageRating() != null) {
+            try {
+                ageRating = AgeRating.valueOf(filter.ageRating().trim().toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException exception) {
+                throw new IllegalArgumentException("Classificação etária inválida. Use FREE, TEN, TWELVE, FOURTEEN, SIXTEEN ou EIGHTEEN");
+            }
+        }
 
-        List<Event> events = eventRepository.search(
-                EventStatus.DRAFT,
-                filter.q() != null && !filter.q().isBlank() ? "%" + filter.q().trim().toLowerCase() + "%" : null,
-                filter.city() != null && !filter.city().isBlank() ? filter.city().trim().toLowerCase() : null,
-                filter.categoryId(),
-                filter.dateFrom(),
-                filter.dateTo(),
-                filter.maxPrice());
+        String text = filter.q() != null && !filter.q().isBlank()
+                ? "%" + filter.q().trim().toLowerCase() + "%" : null;
+        String city = filter.city() != null && !filter.city().isBlank()
+                ? filter.city().trim().toLowerCase() : null;
+        boolean filterCategories = filter.categoryIds() != null && !filter.categoryIds().isEmpty();
+        List<Event> events = filterCategories || Boolean.TRUE.equals(filter.freeOnly()) || ageRating != null
+                ? eventRepository.searchWithAdditionalFilters(EventStatus.DRAFT, text, city,
+                        filter.categoryId(), filter.dateFrom(), filter.dateTo(), filter.maxPrice(),
+                        filterCategories, filterCategories ? filter.categoryIds() : List.of(-1L),
+                        Boolean.TRUE.equals(filter.freeOnly()), ageRating)
+                : eventRepository.search(EventStatus.DRAFT, text, city, filter.categoryId(),
+                        filter.dateFrom(), filter.dateTo(), filter.maxPrice());
 
         if (sort.equals(SORT_POPULAR)) {
             events = sortByFavorites(events);

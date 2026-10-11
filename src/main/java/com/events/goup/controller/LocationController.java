@@ -2,6 +2,7 @@ package com.events.goup.controller;
 
 import com.events.goup.dto.location.LocationRequest;
 import com.events.goup.dto.location.LocationResponse;
+import com.events.goup.client.GooglePlacesClient.PlaceSuggestion;
 import com.events.goup.service.LocationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -21,6 +23,11 @@ import java.util.List;
 public class LocationController {
 
     private final LocationService locationService;
+
+    @GetMapping("/autocomplete")
+    public ResponseEntity<List<PlaceSuggestion>> autocomplete(@RequestParam(required = false) String q) {
+        return ResponseEntity.ok(locationService.autocomplete(q));
+    }
 
     @GetMapping
     public ResponseEntity<List<LocationResponse>> findAll() {

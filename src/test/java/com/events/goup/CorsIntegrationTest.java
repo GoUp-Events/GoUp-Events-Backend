@@ -14,6 +14,17 @@ class CorsIntegrationTest extends IntegrationTestBase {
     private static final String ALLOWED_ORIGIN = "http://localhost:5173";
 
     @Test
+    @DisplayName("site publicado pode enviar Authorization em preflight")
+    void publishedFrontendPreflight() throws Exception {
+        perform(options("/locations/autocomplete")
+                .header("Origin", "https://goup-events.lovable.app")
+                .header("Access-Control-Request-Method", "GET")
+                .header("Access-Control-Request-Headers", "authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://goup-events.lovable.app"));
+    }
+
+    @Test
     @DisplayName("preflight (OPTIONS) de uma origem permitida é aceito, mesmo sem token")
     void preflight_allowedOrigin() throws Exception {
         perform(options("/events")

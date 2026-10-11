@@ -34,6 +34,8 @@ public class GooglePlacesClient {
             "places.id,places.displayName,places.formattedAddress,places.location,"
                     + "places.primaryTypeDisplayName,places.googleMapsUri,"
                     + "places.rating,places.userRatingCount,places.priceLevel";
+    private static final String AUTOCOMPLETE_FIELD_MASK =
+            "suggestions.placePrediction.placeId,suggestions.placePrediction.structuredFormat";
 
     private final RestClient restClient;
     private final String apiKey;
@@ -85,6 +87,43 @@ public class GooglePlacesClient {
 
     public List<String> getNearbyTypes() {
         return nearbyTypes;
+    }
+
+    public List<PlaceSuggestion> autocomplete(String input) {
+        requireApiKey();
+        Map<String, Object> body = Map.of(
+                "input", input,
+                "languageCode", "pt-BR",
+                "regionCode", "BR",
+                "includeQueryPredictions", false,
+                "locationBias", Map.of("circle", Map.of(
+                        "center", Map.of("latitude", -26.9194, "longitude", -49.0661),
+                        "radius", 50_000)));
+        try {
+            AutocompleteResponse response = restClient.post()
+                    .uri("/places:autocomplete")
+                    .header("X-Goog-Api-Key", apiKey)
+                    .header("X-Goog-FieldMask", AUTOCOMPLETE_FIELD_MASK)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .body(AutocompleteResponse.class);
+            if (response == null || response.suggestions() == null) {
+                return List.of();
+            }
+            return response.suggestions().stream()
+                    .map(Suggestion::placePrediction)
+                    .filter(prediction -> prediction != null && prediction.placeId() != null
+                            && prediction.structuredFormat() != null && prediction.structuredFormat().mainText() != null)
+                    .limit(5)
+                    .map(prediction -> new PlaceSuggestion(prediction.placeId(),
+                            prediction.structuredFormat().mainText().text(),
+                            prediction.structuredFormat().secondaryText() != null
+                                    ? prediction.structuredFormat().secondaryText().text() : ""))
+                    .toList();
+        } catch (RestClientException exception) {
+            throw new ExternalServiceException("Falha ao buscar locais no Google Places", exception);
+        }
     }
 
     /**
@@ -182,5 +221,24 @@ public class GooglePlacesClient {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record NearbyResponse(List<Place> places) {
+    }
+
+    public record PlaceSuggestion(String placeId, String name, String address) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record AutocompleteResponse(List<Suggestion> suggestions) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record Suggestion(PlacePrediction placePrediction) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record PlacePrediction(String placeId, StructuredFormat structuredFormat) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record StructuredFormat(LocalizedText mainText, LocalizedText secondaryText) {
     }
 }

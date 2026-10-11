@@ -4,6 +4,7 @@ package com.events.goup.repository;
 import com.events.goup.entity.Event;
 import com.events.goup.entity.User;
 import com.events.goup.entity.enums.EventStatus;
+import com.events.goup.entity.enums.AgeRating;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,6 +37,33 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                        @Param("dateFrom") LocalDate dateFrom,
                        @Param("dateTo") LocalDate dateTo,
                        @Param("maxPrice") BigDecimal maxPrice);
+
+    @EntityGraph(attributePaths = {"user", "location", "category"})
+    @Query("""
+            select e from Event e
+            where e.status <> :hidden
+              and (:text is null or lower(e.title) like :text or lower(e.description) like :text)
+              and (:city is null or lower(e.location.city) = :city)
+              and (:categoryId is null or e.category.id = :categoryId)
+              and (:dateFrom is null or e.eventDate >= :dateFrom)
+              and (:dateTo is null or e.eventDate <= :dateTo)
+              and (:maxPrice is null or e.price <= :maxPrice)
+              and (:filterCategories = false or e.category.id in :categoryIds)
+              and (:freeOnly = false or e.price = 0)
+              and (:ageRating is null or e.ageRating = :ageRating)
+            order by e.eventDate asc, e.startTime asc
+            """)
+    List<Event> searchWithAdditionalFilters(@Param("hidden") EventStatus hidden,
+                                             @Param("text") String text,
+                                             @Param("city") String city,
+                                             @Param("categoryId") Long categoryId,
+                                             @Param("dateFrom") LocalDate dateFrom,
+                                             @Param("dateTo") LocalDate dateTo,
+                                             @Param("maxPrice") BigDecimal maxPrice,
+                                             @Param("filterCategories") boolean filterCategories,
+                                             @Param("categoryIds") List<Long> categoryIds,
+                                             @Param("freeOnly") boolean freeOnly,
+                                             @Param("ageRating") AgeRating ageRating);
 
     @EntityGraph(attributePaths = {"user", "location", "category"})
     @Query("select e from Event e where e.user = :user order by e.eventDate asc, e.startTime asc")

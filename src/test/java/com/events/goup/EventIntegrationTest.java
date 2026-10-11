@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
@@ -235,6 +236,39 @@ class EventIntegrationTest extends MockedApisTestBase {
     }
 
     // ---------- filtros ----------
+
+    @Test
+    @DisplayName("novos filtros combinados preservam rascunhos ocultos")
+    void filters_combinedNewOptions() throws Exception {
+        Event visible = createEvent(owner, blumenau, category, EventStatus.PUBLISHED, daysFromNow(3), "Festival");
+        Event free = createEvent(owner, blumenau, category, EventStatus.PUBLISHED, daysFromNow(5), "Gratuito");
+        free.setPrice(BigDecimal.ZERO);
+        eventRepository.save(free);
+        createEvent(owner, blumenau, categoryAt(1), EventStatus.PUBLISHED, daysFromNow(4), "Outro");
+        createEvent(owner, blumenau, category, EventStatus.DRAFT, daysFromNow(3), "Rascunho");
+
+        perform(get("/events").param("categoryIds", category.getId() + "," + categoryAt(1).getId())
+                .param("ageRating", "FREE").param("freeOnly", "false"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(3));
+        perform(get("/events").param("categoryIds", category.getId().toString())
+                .param("ageRating", "FREE"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(visible.getId().intValue()));
+        perform(get("/events").param("freeOnly", "true"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(free.getId().intValue()));
+    }
+
+    @Test
+    @DisplayName("novos parâmetros inválidos devolvem erro em português")
+    void filters_invalidNewOptions() throws Exception {
+        perform(get("/events").param("freeOnly", "sim"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value("O parâmetro freeOnly deve ser true ou false"));
+        perform(get("/events").param("ageRating", "UNKNOWN"))
+                .andExpect(status().isBadRequest());
+        perform(get("/events").param("categoryIds", "-1"))
+                .andExpect(status().isBadRequest());
+    }
 
     @Test
     @DisplayName("filtros por cidade, categoria, preço e período")

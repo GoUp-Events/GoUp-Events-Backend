@@ -2,6 +2,7 @@ package com.events.goup.service;
 
 import com.events.goup.client.GooglePlacesClient;
 import com.events.goup.client.GooglePlacesClient.PlaceDetails;
+import com.events.goup.client.GooglePlacesClient.PlaceSuggestion;
 import com.events.goup.dto.location.LocationResponse;
 import com.events.goup.entity.Location;
 import com.events.goup.entity.enums.PriceLevel;
@@ -20,6 +21,13 @@ public class LocationService {
 
     private final LocationRepository locationRepository;
     private final GooglePlacesClient googlePlacesClient;
+
+    public List<PlaceSuggestion> autocomplete(String query) {
+        if (query == null || query.trim().length() < 3) {
+            return List.of();
+        }
+        return googlePlacesClient.autocomplete(query.trim());
+    }
 
     @Transactional(readOnly = true)
     public List<LocationResponse> findAll() {
