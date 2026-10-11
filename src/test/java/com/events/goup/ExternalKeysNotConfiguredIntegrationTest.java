@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -33,10 +34,12 @@ class ExternalKeysNotConfiguredIntegrationTest extends IntegrationTestBase {
         createPublishedEvent(premium, location, "Show", 3);
 
         perform(post("/discovery")
+                .header("Origin", "https://goup-events.lovable.app")
                 .header("Authorization", bearer(premium))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"message\":\"um show\"}"))
                 .andExpect(status().isBadGateway())
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://goup-events.lovable.app"))
                 .andExpect(jsonPath("$.message").value("Chave do Gemini não configurada (GEMINI_API_KEY)"));
     }
 

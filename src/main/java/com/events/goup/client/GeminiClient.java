@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import tools.jackson.core.JacksonException;
@@ -70,6 +71,16 @@ public class GeminiClient {
                     .body(body)
                     .retrieve()
                     .body(GenerateContentResponse.class);
+        } catch (HttpClientErrorException exception) {
+            int status = exception.getStatusCode().value();
+            if (status == 401 || status == 403 || (status == 400
+                    && exception.getResponseBodyAsString().contains("API_KEY_INVALID"))) {
+                throw new ExternalServiceException("Chave do Gemini inválida ou sem permissão; verifique GEMINI_API_KEY", exception);
+            }
+            if (status == 429) {
+                throw new ExternalServiceException("Limite de uso do Gemini atingido; tente novamente mais tarde", exception);
+            }
+            throw new ExternalServiceException("Falha ao consultar o Gemini (HTTP " + status + ")", exception);
         } catch (RestClientException exception) {
             throw new ExternalServiceException("Falha ao consultar o Gemini", exception);
         }
