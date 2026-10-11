@@ -58,12 +58,13 @@ public class SecurityConfig {
 
     /**
      * Libera o frontend para consumir a API. As origens vêm de goup.cors.allowed-origins
+     * e aceitam curingas (ex.: https://*.lovable.app).
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource(
             @Value("${goup.cors.allowed-origins}") List<String> allowedOrigins) {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedOriginPatterns(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setMaxAge(3600L);
@@ -73,3 +74,4 @@ public class SecurityConfig {
         return source;
     }
 }
+//
