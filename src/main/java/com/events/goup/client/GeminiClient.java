@@ -1,3 +1,4 @@
+
 package com.events.goup.client;
 
 import com.events.goup.exception.ExternalServiceException;
@@ -28,40 +29,49 @@ public class GeminiClient {
     private static final Map<String, Object> RESPONSE_SCHEMA = Map.of(
             "type", "OBJECT",
             "properties", Map.of(
-                    "eventIds", Map.of("type", "ARRAY", "items", Map.of("type", "INTEGER")),
+                    "eventIds", Map.of(
+                            "type", "ARRAY",
+                            "items", Map.of("type", "INTEGER")),
                     "summary", Map.of("type", "STRING")),
             "required", List.of("eventIds", "summary"));
-
     private final RestClient restClient;
     private final JsonMapper jsonMapper;
     private final String apiKey;
     private final String model;
 
-    public GeminiClient(JsonMapper jsonMapper,
-                        @Value("${goup.gemini.api-key:}") String apiKey,
-                        @Value("${goup.gemini.model:gemini-3.6-flash}") String model) {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+    public GeminiClient(
+            JsonMapper jsonMapper,
+            @Value("${goup.gemini.api-key:}") String apiKey,
+            @Value("${goup.gemini.model:gemini-3.6-flash}") String model) {
+        SimpleClientHttpRequestFactory requestFactory =
+                new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(CONNECT_TIMEOUT);
         requestFactory.setReadTimeout(READ_TIMEOUT);
-        this.restClient = RestClient.builder().baseUrl(BASE_URL).requestFactory(requestFactory).build();
+        this.restClient = RestClient.builder()
+                .baseUrl(BASE_URL)
+                .requestFactory(requestFactory)
+                .build();
         this.jsonMapper = jsonMapper;
         this.apiKey = apiKey;
         this.model = model;
     }
 
-    public Suggestion suggest(String systemInstruction, String userPrompt) {
+    public Suggestion suggest(
+            String systemInstruction,
+            String userPrompt) {
         if (apiKey == null || apiKey.isBlank()) {
             throw new ExternalServiceException("Chave do Gemini não configurada (GEMINI_API_KEY)");
         }
-
         Map<String, Object> body = Map.of(
-                "systemInstruction", Map.of("parts", List.of(Map.of("text", systemInstruction))),
-                "contents", List.of(Map.of("role", "user", "parts", List.of(Map.of("text", userPrompt)))),
+                "systemInstruction", Map.of(
+                        "parts", List.of(
+                                Map.of("text", systemInstruction))),
+                "contents", List.of(Map.of("role", "user", "parts",
+                        List.of(Map.of("text", userPrompt)))),
                 "generationConfig", Map.of(
                         "temperature", 0.3,
                         "responseMimeType", "application/json",
                         "responseSchema", RESPONSE_SCHEMA));
-
         GenerateContentResponse response;
         try {
             response = restClient.post()
@@ -73,47 +83,71 @@ public class GeminiClient {
                     .body(GenerateContentResponse.class);
         } catch (HttpClientErrorException exception) {
             int status = exception.getStatusCode().value();
-<<<<<<< HEAD
-            String message = switch (status) {
-                case 403 -> "Falha ao consultar o Gemini (HTTP 403): chave sem permissão";
-                case 404 -> "Falha ao consultar o Gemini (HTTP 404): modelo inexistente ou indisponível para esta chave; confira GEMINI_MODEL";
-                case 429 -> "Falha ao consultar o Gemini (HTTP 429): cota excedida";
-                case 401 -> "Falha ao consultar o Gemini (HTTP 401): chave inválida";
-                default -> "Falha ao consultar o Gemini (HTTP " + status + ")";
-            };
-            throw new ExternalServiceException(message);
-=======
-            if (status == 401 || status == 403 || (status == 400
-                    && exception.getResponseBodyAsString().contains("API_KEY_INVALID"))) {
-                throw new ExternalServiceException("Chave do Gemini inválida ou sem permissão; verifique GEMINI_API_KEY", exception);
+            if (status == 401 || status == 403
+                    || (status == 400
+                    && exception.getResponseBodyAsString()
+                    .contains("API_KEY_INVALID"))) {
+
+                throw new ExternalServiceException(
+                        "Chave do Gemini inválida ou sem permissão; verifique GEMINI_API_KEY",
+                        exception
+                );
             }
             if (status == 429) {
-                throw new ExternalServiceException("Limite de uso do Gemini atingido; tente novamente mais tarde", exception);
+                throw new ExternalServiceException(
+                        "Limite de uso do Gemini atingido; tente novamente mais tarde",
+                        exception
+                );
             }
-            throw new ExternalServiceException("Falha ao consultar o Gemini (HTTP " + status + ")", exception);
->>>>>>> 741de2bd8a04a46cfd61542f96267e848df91ffa
+            String message = switch (status) {
+                case 404 ->
+                        "Falha ao consultar o Gemini (HTTP 404): modelo inexistente ou indisponível para esta chave; confira GEMINI_MODEL";
+                default -> "Falha ao consultar o Gemini (HTTP " + status + ")";
+            };
+
+            throw new ExternalServiceException(message, exception);
+
         } catch (RestClientException exception) {
-            throw new ExternalServiceException("Falha ao consultar o Gemini");
+            throw new ExternalServiceException(
+                    "Falha ao consultar o Gemini",
+                    exception
+            );
         }
 
         String text = extractText(response);
         try {
-            Suggestion suggestion = jsonMapper.readValue(text, Suggestion.class);
-            List<Long> ids = suggestion.eventIds() != null ? suggestion.eventIds() : List.of();
+            Suggestion suggestion =
+                    jsonMapper.readValue(text, Suggestion.class);
+
+            List<Long> ids = suggestion.eventIds() != null
+                    ? suggestion.eventIds()
+                    : List.of();
+
             return new Suggestion(ids, suggestion.summary());
         } catch (JacksonException exception) {
-            throw new ExternalServiceException("Resposta do Gemini em formato inválido", exception);
+            throw new ExternalServiceException(
+                    "Resposta do Gemini em formato inválido",
+                    exception
+            );
         }
     }
 
     private String extractText(GenerateContentResponse response) {
-        if (response == null || response.candidates() == null || response.candidates().isEmpty()) {
-            throw new ExternalServiceException("O Gemini não retornou nenhuma resposta");
+        if (response == null
+                || response.candidates() == null
+                || response.candidates().isEmpty()) {
+
+            throw new ExternalServiceException(
+                    "O Gemini não retornou nenhuma resposta"
+            );
         }
         Content content = response.candidates().getFirst().content();
-        if (content == null || content.parts() == null || content.parts().isEmpty()
+        if (content == null
+                || content.parts() == null
+                || content.parts().isEmpty()
                 || content.parts().getFirst().text() == null) {
-            throw new ExternalServiceException("O Gemini não retornou nenhuma resposta");
+            throw new ExternalServiceException(
+                    "O Gemini não retornou nenhuma resposta");
         }
         return content.parts().getFirst().text();
     }
