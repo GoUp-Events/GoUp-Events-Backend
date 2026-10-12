@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.time.Clock;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,7 @@ public class FavoriteService {
     private final FavoriteRepository favoriteRepository;
     private final UserRepository userRepository;
     private final EventService eventService;
+    private final Clock clock;
 
     /**
      * Idempotente: favoritar um evento já favoritado não gera erro nem duplica.
@@ -52,7 +54,7 @@ public class FavoriteService {
 
         return favoriteRepository.findAllByUserOrderByCreatedAtAsc(user)
                 .stream()
-                .map(favorite -> new FavoriteResponse(favorite.getCreatedAt(), EventMapper.toResponse(favorite.getEvent())))
+                .map(favorite -> new FavoriteResponse(favorite.getCreatedAt(), EventMapper.toResponse(favorite.getEvent(), clock)))
                 .toList();
     }
 

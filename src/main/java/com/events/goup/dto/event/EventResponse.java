@@ -23,6 +23,7 @@ public record EventResponse(
         AgeRating ageRating,
         UserSummaryResponse user,
         LocationResponse location,
-        CategoryResponse category
+        CategoryResponse category,
+        boolean ended
 ) {
 }

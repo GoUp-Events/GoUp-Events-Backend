@@ -76,6 +76,7 @@ Detalhes:
 ## 6. Eventos
 
 - **Rascunhos (`DRAFT`)** não aparecem mais em `GET /events`. Para quem não é dono nem ADMIN, `GET /events/{id}` de um rascunho responde 404.
+- Eventos terminados saem da lista pública, descoberta e recomendações; detalhe, eventos próprios e favoritos seguem acessíveis com `ended: true`.
 - Novo `GET /users/me/events`: o usuário vê os próprios eventos, inclusive os rascunhos.
 - As consultas de eventos carregam usuário, local e categoria em uma só query. Antes havia o problema de N+1 queries.
 

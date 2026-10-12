@@ -13,8 +13,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.Clock;
+import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RecommendationService {
 
-    private static final ZoneId ZONE = ZoneId.of("America/Sao_Paulo");
     private static final int CANDIDATE_LIMIT = 200;
     private static final int MAX_RECOMMENDATIONS = 10;
     private static final int CATEGORY_WEIGHT = 3;
@@ -39,10 +38,12 @@ public class RecommendationService {
     private final EventRepository eventRepository;
     private final FavoriteRepository favoriteRepository;
     private final PlanService planService;
+    private final Clock clock;
 
     @Transactional(readOnly = true)
     public List<RecommendationResponse> recommend(String authenticatedEmail) {
         User user = planService.requirePremium(authenticatedEmail);
+        ZonedDateTime current = ZonedDateTime.now(clock);
 
         List<Event> favorites = favoriteRepository.findAllByUserOrderByCreatedAtAsc(user)
                 .stream()
@@ -56,7 +57,7 @@ public class RecommendationService {
 
         // Já favoritados e eventos do próprio usuário não fazem sentido como recomendação.
         List<Event> candidates = eventRepository.findDiscoveryCandidates(
-                        EventStatus.PUBLISHED, LocalDate.now(ZONE), null, PageRequest.of(0, CANDIDATE_LIMIT))
+                        EventStatus.PUBLISHED, current.toLocalDate(), current.toLocalTime(), null, PageRequest.of(0, CANDIDATE_LIMIT))
                 .stream()
                 .filter(event -> !favoriteIds.contains(event.getId()))
                 .filter(event -> !event.getUser().getId().equals(user.getId()))
@@ -66,7 +67,7 @@ public class RecommendationService {
         return candidates.stream()
                 .sorted(Comparator.comparingLong((Event event) -> score(event, categoryCount, cityCount)).reversed())
                 .limit(MAX_RECOMMENDATIONS)
-                .map(event -> new RecommendationResponse(reason(event, categoryCount, cityCount), EventMapper.toResponse(event)))
+                .map(event -> new RecommendationResponse(reason(event, categoryCount, cityCount), EventMapper.toResponse(event, clock)))
                 .toList();
     }
 

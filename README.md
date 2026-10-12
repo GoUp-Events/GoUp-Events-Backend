@@ -273,7 +273,7 @@ Todos são opcionais e funcionam do mesmo jeito para Free e Premium.
 | `ageRating`           | `FREE`       | Classificação exata: `FREE`, `TEN`, `TWELVE`, `FOURTEEN`, `SIXTEEN`, `EIGHTEEN` |
 | `sort`                | `popular`    | `date` (padrão) ou `popular` (mais favoritados, ⭐) |
 
-Sem parâmetros, `GET /events` mantém a lista e a ordenação atuais. Os filtros podem ser combinados. Datas invertidas, IDs e preços negativos, classificação, ordenação ou `freeOnly` inválidos retornam 400.
+Sem parâmetros, `GET /events` lista apenas eventos ainda não encerrados, em ordem de data. Os filtros podem ser combinados e não incluem eventos encerrados, mesmo com `dateFrom` no passado. Datas invertidas, IDs e preços negativos, classificação, ordenação ou `freeOnly` inválidos retornam 400.
 
 ```http
 GET /events?q=festival&city=Blumenau&categoryIds=1,2&dateFrom=2026-10-01&dateTo=2026-10-31&freeOnly=true&ageRating=FREE&sort=date
@@ -290,6 +290,7 @@ GET /events?q=festival&city=Blumenau&categoryIds=1,2&dateFrom=2026-10-01&dateTo=
     "endTime": "22:00:00",
     "price": 0,
     "status": "PUBLISHED",
+    "ended": false,
     "ageRating": "FREE",
     "user": { "id": 1, "name": "Ana" },
     "location": { "id": 1, "placeId": "ChIJ...", "name": "Parque Vila Germânica", "formattedAddress": "Blumenau - SC", "address": null, "number": null, "neighborhood": null, "city": "Blumenau", "state": "SC", "zip": null, "latitude": -26.9194, "longitude": -49.0661, "rating": null, "priceLevel": null },
@@ -551,6 +552,8 @@ GET    /users/me/favorites     → [ { "favoritedAt": "...", "event": { ... } } 
 
 - Status padrão: `DRAFT` (rascunho).
 - Rascunhos não aparecem na listagem pública. Só o dono e o ADMIN conseguem abri-los; para os demais, a resposta é 404.
+- Um evento terminou se o status é `FINISHED` ou se, no fuso `America/Sao_Paulo`, a data já passou. No dia do evento, ele termina quando a hora atual alcança `endTime`; sem `endTime`, termina no dia seguinte.
+- `GET /events`, descoberta e recomendações excluem eventos terminados. `GET /events/{id}`, `GET /users/me/events` e `GET /users/me/favorites` continuam mostrando os eventos acessíveis, com `ended: true` no `EventResponse` quando terminados.
 - A data não pode estar no passado, e o horário de término precisa ser depois do de início.
 
 ### Locais
@@ -572,7 +575,7 @@ GET    /users/me/favorites     → [ { "favoritedAt": "...", "event": { ... } } 
 
 ### Descoberta Mágica
 
-1. O backend busca os candidatos: eventos `PUBLISHED`, com data de hoje em diante, filtrados pela cidade (se informada),
+1. O backend busca os candidatos: eventos `PUBLISHED` ainda não terminados, filtrados pela cidade (se informada),
    até 20.
 2. Só esses eventos são enviados ao Gemini.
 3. O Gemini responde `{ eventIds, summary }` em JSON.

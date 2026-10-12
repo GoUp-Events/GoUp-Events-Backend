@@ -5,13 +5,16 @@ import com.events.goup.dto.event.EventResponse;
 import com.events.goup.dto.user.UserSummaryResponse;
 import com.events.goup.entity.Category;
 import com.events.goup.entity.Event;
+import com.events.goup.service.EventSchedule;
+
+import java.time.Clock;
 
 public final class EventMapper {
 
     private EventMapper() {
     }
 
-    public static EventResponse toResponse(Event event) {
+    public static EventResponse toResponse(Event event, Clock clock) {
         UserSummaryResponse userResponse = new UserSummaryResponse(
                 event.getUser().getId(),
                 event.getUser().getName()
@@ -34,7 +37,8 @@ public final class EventMapper {
                 event.getAgeRating(),
                 userResponse,
                 LocationMapper.toResponse(event.getLocation()),
-                categoryResponse
+                categoryResponse,
+                EventSchedule.hasEnded(event, clock)
         );
     }
 }

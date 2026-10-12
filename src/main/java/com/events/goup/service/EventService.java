@@ -27,6 +27,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
@@ -48,6 +52,7 @@ public class EventService {
     private final LocationService locationService;
     private final GooglePlacesClient googlePlacesClient;
     private final PlanService planService;
+    private final Clock clock;
 
     /**
      * Lista pública com pesquisa e filtros: rascunhos (DRAFT) não aparecem.
@@ -89,12 +94,15 @@ public class EventService {
         String city = filter.city() != null && !filter.city().isBlank()
                 ? filter.city().trim().toLowerCase() : null;
         boolean filterCategories = filter.categoryIds() != null && !filter.categoryIds().isEmpty();
+        ZonedDateTime current = ZonedDateTime.now(clock);
+        LocalDate today = current.toLocalDate();
+        LocalTime now = current.toLocalTime();
         List<Event> events = filterCategories || Boolean.TRUE.equals(filter.freeOnly()) || ageRating != null
-                ? eventRepository.searchWithAdditionalFilters(EventStatus.DRAFT, text, city,
+                ? eventRepository.searchWithAdditionalFilters(EventStatus.DRAFT, today, now, text, city,
                         filter.categoryId(), filter.dateFrom(), filter.dateTo(), filter.maxPrice(),
                         filterCategories, filterCategories ? filter.categoryIds() : List.of(-1L),
                         Boolean.TRUE.equals(filter.freeOnly()), ageRating)
-                : eventRepository.search(EventStatus.DRAFT, text, city, filter.categoryId(),
+                : eventRepository.search(EventStatus.DRAFT, today, now, text, city, filter.categoryId(),
                         filter.dateFrom(), filter.dateTo(), filter.maxPrice());
 
         if (sort.equals(SORT_POPULAR)) {
@@ -102,7 +110,7 @@ public class EventService {
         }
 
         return events.stream()
-                .map(EventMapper::toResponse)
+                .map(event -> EventMapper.toResponse(event, clock))
                 .toList();
     }
 
@@ -110,13 +118,13 @@ public class EventService {
     public List<EventResponse> findAllByOwner(String authenticatedEmail) {
         return eventRepository.findAllByOwner(findUserByEmail(authenticatedEmail))
                 .stream()
-                .map(EventMapper::toResponse)
+                .map(event -> EventMapper.toResponse(event, clock))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public EventResponse findById(Long id, String authenticatedEmail) {
-        return EventMapper.toResponse(findVisibleEntity(id, authenticatedEmail));
+        return EventMapper.toResponse(findVisibleEntity(id, authenticatedEmail), clock);
     }
 
     /**
@@ -155,7 +163,7 @@ public class EventService {
         event.setUser(owner);
         event.setStatus(request.status() != null ? request.status() : EventStatus.DRAFT);
 
-        return EventMapper.toResponse(eventRepository.save(event));
+        return EventMapper.toResponse(eventRepository.save(event), clock);
     }
 
     @Transactional
@@ -172,7 +180,7 @@ public class EventService {
         applyRequest(event, request, location, category);
         event.setStatus(request.status() != null ? request.status() : event.getStatus());
 
-        return EventMapper.toResponse(eventRepository.save(event));
+        return EventMapper.toResponse(eventRepository.save(event), clock);
     }
 
     @Transactional

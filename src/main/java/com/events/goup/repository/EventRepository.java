@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +23,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("""
             select e from Event e
             where e.status <> :hidden
+              and e.status <> com.events.goup.entity.enums.EventStatus.FINISHED
+              and (e.eventDate > :today or (e.eventDate = :today and (e.endTime is null or e.endTime > :now)))
               and (:text is null or lower(e.title) like :text or lower(e.description) like :text)
               and (:city is null or lower(e.location.city) = :city)
               and (:categoryId is null or e.category.id = :categoryId)
@@ -31,6 +34,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             order by e.eventDate asc, e.startTime asc
             """)
     List<Event> search(@Param("hidden") EventStatus hidden,
+                       @Param("today") LocalDate today,
+                       @Param("now") LocalTime now,
                        @Param("text") String text,
                        @Param("city") String city,
                        @Param("categoryId") Long categoryId,
@@ -42,6 +47,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("""
             select e from Event e
             where e.status <> :hidden
+              and e.status <> com.events.goup.entity.enums.EventStatus.FINISHED
+              and (e.eventDate > :today or (e.eventDate = :today and (e.endTime is null or e.endTime > :now)))
               and (:text is null or lower(e.title) like :text or lower(e.description) like :text)
               and (:city is null or lower(e.location.city) = :city)
               and (:categoryId is null or e.category.id = :categoryId)
@@ -54,6 +61,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             order by e.eventDate asc, e.startTime asc
             """)
     List<Event> searchWithAdditionalFilters(@Param("hidden") EventStatus hidden,
+                                             @Param("today") LocalDate today,
+                                             @Param("now") LocalTime now,
                                              @Param("text") String text,
                                              @Param("city") String city,
                                              @Param("categoryId") Long categoryId,
@@ -78,12 +87,13 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("""
             select e from Event e
             where e.status = :status
-              and e.eventDate >= :fromDate
+              and (e.eventDate > :today or (e.eventDate = :today and (e.endTime is null or e.endTime > :now)))
               and (:city is null or lower(e.location.city) = :city)
             order by e.eventDate asc, e.startTime asc
             """)
     List<Event> findDiscoveryCandidates(@Param("status") EventStatus status,
-                                        @Param("fromDate") LocalDate fromDate,
+                                        @Param("today") LocalDate today,
+                                        @Param("now") LocalTime now,
                                         @Param("city") String city,
                                         Pageable pageable);
 }

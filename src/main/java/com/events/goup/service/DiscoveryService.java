@@ -14,9 +14,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.Clock;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 @Service
 public class DiscoveryService {
 
-    private static final ZoneId ZONE = ZoneId.of("America/Sao_Paulo");
     private static final int MAX_SUGGESTIONS = 5;
     private static final int MAX_DESCRIPTION_LENGTH = 300;
 
@@ -53,15 +52,18 @@ public class DiscoveryService {
     private final EventRepository eventRepository;
     private final GeminiClient geminiClient;
     private final PlanService planService;
+    private final Clock clock;
     private final int candidateLimit;
 
     public DiscoveryService(EventRepository eventRepository,
                             GeminiClient geminiClient,
                             PlanService planService,
+                            Clock clock,
                             @Value("${goup.discovery.candidate-limit:20}") int candidateLimit) {
         this.eventRepository = eventRepository;
         this.geminiClient = geminiClient;
         this.planService = planService;
+        this.clock = clock;
         this.candidateLimit = candidateLimit;
     }
 
@@ -69,6 +71,7 @@ public class DiscoveryService {
     public DiscoveryResponse discover(DiscoveryRequest request, String authenticatedEmail) {
         // Verificado antes de qualquer consulta, para não gastar cota do Gemini com usuário Free.
         planService.requirePremium(authenticatedEmail);
+        ZonedDateTime current = ZonedDateTime.now(clock);
 
         String city = request.city() != null && !request.city().isBlank() ? request.city().trim() : null;
 
@@ -76,7 +79,7 @@ public class DiscoveryService {
         String cityFilter = city != null ? city.toLowerCase() : null;
 
         List<Event> candidates = eventRepository.findDiscoveryCandidates(
-                EventStatus.PUBLISHED, LocalDate.now(ZONE), cityFilter, PageRequest.of(0, candidateLimit));
+                EventStatus.PUBLISHED, current.toLocalDate(), current.toLocalTime(), cityFilter, PageRequest.of(0, candidateLimit));
 
         if (candidates.isEmpty()) {
             String where = city != null ? " em " + city : "";
@@ -92,7 +95,7 @@ public class DiscoveryService {
                 .filter(candidatesById::containsKey)
                 .limit(MAX_SUGGESTIONS)
                 .map(candidatesById::get)
-                .map(EventMapper::toResponse)
+                .map(event -> EventMapper.toResponse(event, clock))
                 .toList();
 
         return new DiscoveryResponse(suggestion.summary(), events);
@@ -101,7 +104,7 @@ public class DiscoveryService {
     private String buildPrompt(String message, List<Event> candidates) {
         StringBuilder prompt = new StringBuilder();
         prompt.append("Data e hora atuais: ")
-                .append(LocalDateTime.now(ZONE).format(
+                .append(LocalDateTime.now(clock).format(
                         DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy HH:mm", Locale.forLanguageTag("pt-BR"))))
                 .append(" (horário de Brasília)\n\n");
         prompt.append("Pedido do usuário: \"").append(message).append("\"\n\n");
