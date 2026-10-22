@@ -1,19 +1,60 @@
-# GoUp — Backend
+<div align="center">
 
-API REST do **GoUp**, uma plataforma de **descoberta e divulgação de eventos e lazer em Blumenau e região**.
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/goup_logo.gif" width="200" alt="Logo animado do GoUp Events">
 
-Na plataforma, as pessoas encontram o que fazer, publicam eventos, favoritam o que querem ir e recebem sugestões de uma
-IA que só recomenda eventos reais cadastrados.
+<h2>GoUp &#9670; Backend</h2>
 
-> O GoUp **não** vende ingressos, **não** é rede social, **não** é planejador de viagem completo e **não** é um
-> assistente de IA genérico.
+<h3>Mais momentos. Mais você.</h3>
 
----
+<p>API REST do GoUp: eventos e lazer em Blumenau e região, com favoritos, locais próximos e uma IA que só recomenda eventos reais.</p>
+
+<a href="https://goup-events.lovable.app/"><img src="https://img.shields.io/badge/Site-F03D82?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Site do GoUp"></a>&nbsp;&nbsp;&nbsp;
+<a href="https://www.youtube.com/@GoUp.Events"><img src="https://img.shields.io/badge/YouTube-FFC931?style=for-the-badge&logo=youtube&logoColor=black" alt="Canal do GoUp no YouTube"></a>&nbsp;&nbsp;&nbsp;
+<a href="https://github.com/GoUp-Events/goup-events"><img src="https://img.shields.io/badge/Frontend-F03D82?style=for-the-badge&logo=github&logoColor=white" alt="Repositório do frontend"></a>&nbsp;&nbsp;&nbsp;
+<a href="https://github.com/GoUp-Events"><img src="https://img.shields.io/badge/Organiza%C3%A7%C3%A3o-FFC931?style=for-the-badge&logo=github&logoColor=black" alt="Organização GoUp-Events"></a>
+
+<br><br>
+
+<img src="https://img.shields.io/badge/Java_21-F03D82?style=flat-square&logo=openjdk&logoColor=white" alt="Java 21">
+<img src="https://img.shields.io/badge/Spring_Boot_4.1-FFC931?style=flat-square&logo=springboot&logoColor=black" alt="Spring Boot 4.1">
+<img src="https://img.shields.io/badge/Spring_Security-F03D82?style=flat-square&logo=springsecurity&logoColor=white" alt="Spring Security">
+<img src="https://img.shields.io/badge/JWT-FFC931?style=flat-square&logo=jsonwebtokens&logoColor=black" alt="JWT">
+<img src="https://img.shields.io/badge/MySQL_8-F03D82?style=flat-square&logo=mysql&logoColor=white" alt="MySQL 8">
+<img src="https://img.shields.io/badge/Maven-FFC931?style=flat-square&logo=apachemaven&logoColor=black" alt="Maven">
+<img src="https://img.shields.io/badge/Gemini-F03D82?style=flat-square&logo=googlegemini&logoColor=white" alt="Gemini">
+<img src="https://img.shields.io/badge/Google_Places-FFC931?style=flat-square&logo=googlemaps&logoColor=black" alt="Google Places">
+
+<br><br>
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+
+</div>
+
+<br>
+
+<h2 align="center">&#9679; Sobre o backend</h2>
+
+<p align="center">
+Aqui ficam as regras de negócio do <b>GoUp</b>: contas, eventos, locais, favoritos,<br>
+planos Free e Premium e a integração com <b>Google Places</b> e <b>Gemini</b>.<br>
+O frontend consome esta API, e a verificação de permissões e de plano acontece sempre aqui.
+</p>
+
+<p align="center">
+<sub>O GoUp <b>não</b> vende ingressos, <b>não</b> é rede social e <b>não</b> é um assistente de IA genérico.</sub>
+</p>
+
+<p align="center"><sub>Projeto final do curso de Desenvolvimento Java &mdash; SENAC Entra21</sub></p>
+
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
+
+<br>
 
 ## Sumário
 
-- [Stack](#stack)
 - [Funcionalidades](#funcionalidades)
+- [Stack](#stack)
 - [Como rodar](#como-rodar)
 - [Configuração](#configuração)
 - [Estrutura do projeto](#estrutura-do-projeto)
@@ -23,9 +64,31 @@ IA que só recomenda eventos reais cadastrados.
 - [Regras de negócio](#regras-de-negócio)
 - [Erros](#erros)
 - [Integrações externas](#integrações-externas)
-- [Próximos passos](#próximos-passos)
+- [Equipe](#equipe)
 
----
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
+
+## Funcionalidades
+
+| &#9670; | O que faz |
+|---|---|
+| **Contas** | Cadastro e login com JWT. Dois papéis: `USER` e `ADMIN`. |
+| **Eventos** | Qualquer usuário logado cria eventos e edita ou exclui só os próprios. O `ADMIN` edita e exclui qualquer um. |
+| **Locais via Google Places** | O local vem do autocomplete do Google e é reaproveitado entre eventos. Nunca é digitado à mão. |
+| **Categorias** | Lista fixa, criada automaticamente na primeira execução. |
+| **Favoritos** | O usuário salva os eventos que quer ir. |
+| **Pesquisa e filtros** | Texto, cidade, categorias, período, preço e classificação etária em `GET /events`. |
+| **Eventos encerrados** | Calculados no fuso `America/Sao_Paulo`, saem das listagens e vêm marcados com `ended: true` nos detalhes. |
+| **Locais próximos** | Restaurantes, bares, parques e mais perto do evento, com distância, preço e avaliação. |
+| **Descoberta Mágica** (Premium) | O usuário conta o que quer fazer e o Gemini sugere eventos reais cadastrados. |
+| **Recomendações** (Premium) | Eventos sugeridos a partir dos favoritos do usuário. |
+| **Planos Free e Premium** | Definidos pelo atributo `premium` do usuário. Veja [Planos](#planos-free-e-premium). |
+
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
 
 ## Stack
 
@@ -35,31 +98,15 @@ IA que só recomenda eventos reais cadastrados.
 | Framework      | Spring Boot 4.1 (Spring MVC)                    |
 | Persistência   | Spring Data JPA / Hibernate                     |
 | Banco de dados | MySQL 8                                         |
-| Segurança      | Spring Security + JWT (jjwt), senhas com BCrypt |
+| Segurança      | Spring Security + JWT (jjwt 0.12), senhas com BCrypt |
 | Validação      | Bean Validation (Jakarta)                       |
 | Integrações    | Google Places API (New) e Gemini API            |
 | Utilitários    | Lombok                                          |
 | Build          | Maven (com wrapper `mvnw`)                      |
 
----
-
-## Funcionalidades
-
-- **Contas**: cadastro e login com JWT. Existem dois papéis, `USER` e `ADMIN`.
-- **Eventos**: qualquer usuário logado cria eventos. Cada um edita e exclui só os próprios; o ADMIN pode editar e
-  excluir qualquer evento.
-- **Locais via Google Places**: o local do evento vem do autocomplete do Google e é reaproveitado entre eventos.
-- **Categorias**: lista fixa, criada automaticamente.
-- **Favoritos**: o usuário salva os eventos que quer ir. É a versão simplificada do "roteiro".
-- **Pesquisa e filtros**: busca por texto, cidade, categoria, período e preço em `GET /events`.
-- **Descoberta Mágica** *(Premium)*: chatbot em que o usuário descreve o que quer fazer e a IA (Gemini) sugere eventos
-  reais.
-- **Locais próximos**: na tela do evento, mostra os lugares mais próximos (restaurantes, bares, parques etc.) com
-  distância, preço e avaliação. Free vê 3; Premium vê até 10 e pode filtrar por tipo de lugar.
-- **Recomendações personalizadas** *(Premium)*: eventos sugeridos a partir dos favoritos do usuário.
-- **Planos Free e Premium**: definidos pelo atributo `premium` do usuário. Veja [Planos](#planos-free-e-premium).
-
----
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
 
 ## Como rodar
 
@@ -67,8 +114,7 @@ IA que só recomenda eventos reais cadastrados.
 
 - **JDK 21**
 - **MySQL 8** rodando em `localhost:3306`
-- Chaves de API do **Google Places** e do **Gemini** (veja [Integrações externas](#integrações-externas)). Sem elas, a
-  API sobe normalmente, mas criar locais, locais próximos e a Descoberta Mágica retornam erro 502.
+- Chaves de API do **Google Places** e do **Gemini** (veja [Integrações externas](#integrações-externas)). Sem elas, a API sobe normalmente, mas autocomplete de locais, criação de locais, locais próximos e Descoberta Mágica retornam erro `502`.
 
 ### Subindo o MySQL com Docker (opcional)
 
@@ -83,11 +129,14 @@ O banco `goup_events` é criado automaticamente na primeira execução.
 ```bash
 export GOOGLE_PLACES_API_KEY=sua-chave-do-google
 export GEMINI_API_KEY=sua-chave-do-gemini
+export GOUP_JWT_SECRET=um-segredo-longo-e-aleatorio
 
 ./mvnw spring-boot:run
 ```
 
 A API sobe em **http://localhost:8080**.
+
+Se o seu MySQL não usa os valores padrão do `application.properties`, defina também `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER` e `MYSQLPASSWORD`.
 
 Para gerar o `.jar`:
 
@@ -98,18 +147,20 @@ java -jar target/goup-0.0.1-SNAPSHOT.jar
 
 > Se aparecer `Permissão negada` ao rodar `./mvnw`, execute `chmod +x mvnw`.
 
----
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
 
 ## Configuração
 
-As configurações ficam em `src/main/resources/application.properties`.
+As configurações ficam em `src/main/resources/application.properties`. Segredos e chaves vêm sempre de variáveis de ambiente, nunca do código.
 
 | Propriedade                               | Padrão                                               | Descrição                                           |
 |-------------------------------------------|------------------------------------------------------|-----------------------------------------------------|
-| `spring.datasource.url`                   | env `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`         | Conexão com o MySQL                                 |
-| `spring.datasource.username` / `password` | env `MYSQLUSER` / `MYSQLPASSWORD`                     | Credenciais do banco                                |
-| `goup.jwt.secret`                         | env `GOUP_JWT_SECRET`                                 | Segredo de assinatura do JWT                        |
-| `goup.jwt.expiration-ms`                  | env `GOUP_JWT_EXPIRATION_MS` (padrão `7200000`)       | Validade do token em milissegundos                  |
+| `spring.datasource.url`                   | env `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`        | Conexão com o MySQL                                 |
+| `spring.datasource.username` / `password` | env `MYSQLUSER` / `MYSQLPASSWORD`                    | Credenciais do banco                                |
+| `goup.jwt.secret`                         | env `GOUP_JWT_SECRET`                                | Segredo de assinatura do JWT                        |
+| `goup.jwt.expiration-ms`                  | env `GOUP_JWT_EXPIRATION_MS` (padrão `7200000`)      | Validade do token em milissegundos (2 horas)        |
 | `goup.cors.allowed-origins`               | env `GOUP_CORS_ORIGINS` (padrão: site publicado e localhost nas portas 5173 e 3000) | Origens CORS permitidas |
 | `goup.google.places.api-key`              | env `GOOGLE_PLACES_API_KEY`                          | Chave do Google Places                              |
 | `goup.google.places.nearby-radius-meters` | `1500`                                               | Raio da busca de locais próximos                    |
@@ -122,7 +173,9 @@ As configurações ficam em `src/main/resources/application.properties`.
 
 O schema do banco é gerado pelo Hibernate (`ddl-auto=update`). As categorias são inseridas automaticamente ao iniciar.
 
----
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
 
 ## Estrutura do projeto
 
@@ -164,7 +217,9 @@ User 1───* Favorite *───1 Event      (par user/event único)
 - `AgeRating`: `FREE`, `TEN`, `TWELVE`, `FOURTEEN`, `SIXTEEN`, `EIGHTEEN`
 - `PriceLevel`: `FREE`, `INEXPENSIVE`, `MODERATE`, `EXPENSIVE`, `VERY_EXPENSIVE`
 
----
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
 
 ## Autenticação
 
@@ -184,96 +239,96 @@ Todo usuário cadastrado começa como `USER`. Para tornar um usuário `ADMIN`, a
 UPDATE users SET role = 'ADMIN' WHERE email = 'admin@exemplo.com';
 ```
 
-Todo usuário também começa como **Free** (`premium = false`). Para tornar um usuário **Premium**, altere direto no
-banco (não existe endpoint para isso):
+Todo usuário também começa como **Free** (`premium = false`). Para tornar um usuário **Premium**, altere direto no banco (não existe endpoint para isso):
 
 ```sql
 UPDATE users SET premium = true WHERE email = 'usuariopremium@gmail.com';
 ```
 
-A mudança vale já na próxima requisição, sem precisar fazer login de novo: o backend lê `premium` do banco a cada
-chamada, a partir do e-mail do token. O valor nunca vem do frontend.
+A mudança vale já na próxima requisição, sem precisar fazer login de novo: o backend lê `premium` do banco a cada chamada, a partir do e-mail do token. O valor nunca vem do frontend.
 
----
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
 
 ## Endpoints
 
-🌐 = público · 🔒 = exige login · ⭐ = exige login com `premium = true` (Free recebe 403)
+**Legenda de acesso:** &#9679; Público &nbsp;&middot;&nbsp; &#9670; Exige login &nbsp;&middot;&nbsp; &#9733; Exige login com `premium = true` (Free recebe `403`)
 
 ### Auth
 
-| Método | Rota             | Acesso | Descrição                  |
-|--------|------------------|--------|----------------------------|
-| `POST` | `/auth/register` | 🌐     | Cria conta e retorna token |
-| `POST` | `/auth/login`    | 🌐     | Faz login e retorna token  |
+| Método | Rota             | Acesso      | Descrição                  |
+|--------|------------------|-------------|----------------------------|
+| `POST` | `/auth/register` | &#9679;     | Cria conta e retorna token |
+| `POST` | `/auth/login`    | &#9679;     | Faz login e retorna token  |
 
 ### Usuário
 
-| Método | Rota                        | Acesso | Descrição                                       |
-|--------|-----------------------------|--------|-------------------------------------------------|
-| `GET`  | `/users/me`                 | 🔒     | Dados do usuário logado (inclui `premium`)      |
-| `GET`  | `/users/me/events`          | 🔒     | Eventos criados pelo usuário (inclui rascunhos) |
-| `GET`  | `/users/me/favorites`       | 🔒     | Favoritos, na ordem em que foram adicionados    |
-| `GET`  | `/users/me/recommendations` | ⭐      | Recomendações personalizadas                    |
+| Método | Rota                        | Acesso  | Descrição                                       |
+|--------|-----------------------------|---------|-------------------------------------------------|
+| `GET`  | `/users/me`                 | &#9670; | Dados do usuário logado (inclui `premium`)      |
+| `GET`  | `/users/me/events`          | &#9670; | Eventos criados pelo usuário (inclui rascunhos) |
+| `GET`  | `/users/me/favorites`       | &#9670; | Favoritos, na ordem em que foram adicionados    |
+| `GET`  | `/users/me/recommendations` | &#9733; | Recomendações personalizadas                    |
 
 ### Eventos
 
-| Método   | Rota                    | Acesso | Descrição                                                              |
-|----------|-------------------------|--------|------------------------------------------------------------------------|
-| `GET`    | `/events`               | 🌐     | Lista e pesquisa eventos (rascunhos não aparecem). Filtros abaixo      |
-| `GET`    | `/events/{id}`          | 🌐     | Detalhe do evento                                                      |
-| `GET`    | `/events/{id}/nearby`   | 🌐     | Lugares próximos do evento: 3 no Free, até 10 no Premium. `?type=` é ⭐ |
-| `POST`   | `/events`               | 🔒     | Cria evento                                                            |
-| `PUT`    | `/events/{id}`          | 🔒     | Edita evento (dono ou ADMIN)                                           |
-| `DELETE` | `/events/{id}`          | 🔒     | Exclui evento (dono ou ADMIN)                                          |
-| `POST`   | `/events/{id}/favorite` | 🔒     | Favorita o evento                                                      |
-| `DELETE` | `/events/{id}/favorite` | 🔒     | Remove dos favoritos                                                   |
+| Método   | Rota                    | Acesso  | Descrição                                                                  |
+|----------|-------------------------|---------|----------------------------------------------------------------------------|
+| `GET`    | `/events`               | &#9679; | Lista e pesquisa eventos (rascunhos não aparecem). Filtros abaixo          |
+| `GET`    | `/events/{id}`          | &#9679; | Detalhe do evento                                                          |
+| `GET`    | `/events/{id}/nearby`   | &#9679; | Lugares próximos: 3 no Free, até 10 no Premium. O filtro `?type=` é &#9733; |
+| `POST`   | `/events`               | &#9670; | Cria evento                                                                |
+| `PUT`    | `/events/{id}`          | &#9670; | Edita evento (dono ou ADMIN)                                               |
+| `DELETE` | `/events/{id}`          | &#9670; | Exclui evento (dono ou ADMIN)                                              |
+| `POST`   | `/events/{id}/favorite` | &#9670; | Favorita o evento                                                          |
+| `DELETE` | `/events/{id}/favorite` | &#9670; | Remove dos favoritos                                                       |
 
 ### Locais
 
-| Método | Rota              | Acesso | Descrição                                             |
-|--------|-------------------|--------|-------------------------------------------------------|
-| `GET`  | `/locations`      | 🌐     | Lista locais                                          |
-| `GET`  | `/locations/{id}` | 🌐     | Detalhe do local                                      |
-| `POST` | `/locations`      | 🔒     | Resolve um `placeId` do Google (salva ou reaproveita) |
-| `GET`  | `/locations/autocomplete?q=...` | 🔒 | Busca até 5 sugestões de locais pelo nome |
+| Método | Rota                            | Acesso  | Descrição                                             |
+|--------|---------------------------------|---------|-------------------------------------------------------|
+| `GET`  | `/locations`                    | &#9679; | Lista locais                                          |
+| `GET`  | `/locations/{id}`               | &#9679; | Detalhe do local                                      |
+| `GET`  | `/locations/autocomplete?q=...` | &#9670; | Busca até 5 sugestões de locais pelo nome             |
+| `POST` | `/locations`                    | &#9670; | Resolve um `placeId` do Google (salva ou reaproveita) |
 
 ### Categorias
 
-| Método | Rota               | Acesso | Descrição            |
-|--------|--------------------|--------|----------------------|
-| `GET`  | `/categories`      | 🌐     | Lista categorias     |
-| `GET`  | `/categories/{id}` | 🌐     | Detalhe da categoria |
+| Método | Rota               | Acesso  | Descrição            |
+|--------|--------------------|---------|----------------------|
+| `GET`  | `/categories`      | &#9679; | Lista categorias     |
+| `GET`  | `/categories/{id}` | &#9679; | Detalhe da categoria |
 
 ### Planos
 
-| Método | Rota     | Acesso | Descrição                                                      |
-|--------|----------|--------|----------------------------------------------------------------|
-| `GET`  | `/plans` | 🌐     | Free e Premium com benefícios e limites (tela "Evoluir plano") |
+| Método | Rota     | Acesso  | Descrição                                                      |
+|--------|----------|---------|----------------------------------------------------------------|
+| `GET`  | `/plans` | &#9679; | Free e Premium com benefícios e limites (tela "Evoluir plano") |
 
 ### Descoberta Mágica
 
-| Método | Rota         | Acesso | Descrição                             |
-|--------|--------------|--------|---------------------------------------|
-| `POST` | `/discovery` | ⭐      | Sugestão de eventos pela IA (chatbot) |
+| Método | Rota         | Acesso  | Descrição                             |
+|--------|--------------|---------|---------------------------------------|
+| `POST` | `/discovery` | &#9733; | Sugestão de eventos pela IA (chatbot) |
 
 ### Filtros de `GET /events`
 
-Todos são opcionais e funcionam do mesmo jeito para Free e Premium.
+Todos são opcionais e podem ser combinados.
 
-| Parâmetro             | Exemplo      | Descrição                                          |
-|-----------------------|--------------|----------------------------------------------------|
-| `q`                   | `festa`      | Texto no título ou na descrição                    |
-| `city`                | `Blumenau`   | Cidade do local (sem diferenciar maiúsculas)       |
-| `categoryId`          | `12`         | Categoria                                          |
-| `categoryIds`         | `12,13` ou `categoryIds=12&categoryIds=13` | Várias categorias; combinável com `categoryId` |
-| `dateFrom` / `dateTo` | `2026-10-01` | Período (`yyyy-MM-dd`)                             |
-| `maxPrice`            | `0`          | Preço máximo (`0` = só gratuitos)                  |
-| `freeOnly`            | `true`       | Apenas eventos com preço zero (`false` não filtra) |
-| `ageRating`           | `FREE`       | Classificação exata: `FREE`, `TEN`, `TWELVE`, `FOURTEEN`, `SIXTEEN`, `EIGHTEEN` |
-| `sort`                | `popular`    | `date` (padrão) ou `popular` (mais favoritados, ⭐) |
+| Parâmetro             | Exemplo                                      | Descrição                                                                 |
+|-----------------------|----------------------------------------------|---------------------------------------------------------------------------|
+| `q`                   | `festa`                                      | Texto no título ou na descrição                                           |
+| `city`                | `Blumenau`                                   | Cidade do local (sem diferenciar maiúsculas)                              |
+| `categoryId`          | `12`                                         | Uma categoria                                                             |
+| `categoryIds`         | `12,13` ou `categoryIds=12&categoryIds=13`   | Várias categorias; combinável com `categoryId`                            |
+| `dateFrom` / `dateTo` | `2026-10-01`                                 | Período (`yyyy-MM-dd`)                                                    |
+| `maxPrice`            | `0`                                          | Preço máximo (`0` = só gratuitos)                                         |
+| `freeOnly`            | `true`                                       | Apenas eventos com preço zero (`false` não filtra)                        |
+| `ageRating`           | `FREE`                                       | Classificação exata: `FREE`, `TEN`, `TWELVE`, `FOURTEEN`, `SIXTEEN`, `EIGHTEEN` |
+| `sort`                | `popular`                                    | `date` (padrão) ou `popular` (mais favoritados, &#9733;)                  |
 
-Sem parâmetros, `GET /events` lista apenas eventos ainda não encerrados, em ordem de data. Os filtros podem ser combinados e não incluem eventos encerrados, mesmo com `dateFrom` no passado. Datas invertidas, IDs e preços negativos, classificação, ordenação ou `freeOnly` inválidos retornam 400.
+Sem parâmetros, `GET /events` lista apenas eventos ainda não encerrados, em ordem de data. Os filtros não incluem eventos encerrados, mesmo com `dateFrom` no passado. Datas invertidas, IDs e preços negativos e valores inválidos de `ageRating`, `sort` ou `freeOnly` retornam `400`.
 
 ```http
 GET /events?q=festival&city=Blumenau&categoryIds=1,2&dateFrom=2026-10-01&dateTo=2026-10-31&freeOnly=true&ageRating=FREE&sort=date
@@ -301,7 +356,7 @@ GET /events?q=festival&city=Blumenau&categoryIds=1,2&dateFrom=2026-10-01&dateTo=
 
 ### Autocomplete de locais
 
-Envie o JWT e pelo menos 3 caracteres em `q`. Textos menores retornam `[]` sem consulta ao Google. O front exibe `name` e `address` e envia o `placeId` escolhido no fluxo atual de `POST /locations` ou `POST /events`.
+Envie o JWT e pelo menos 3 caracteres em `q`. Textos menores retornam `[]` sem consultar o Google. O frontend exibe `name` e `address` e envia o `placeId` escolhido em `POST /locations` ou `POST /events`.
 
 ```http
 GET /locations/autocomplete?q=Vila%20Germ%C3%A2nica
@@ -314,10 +369,11 @@ Authorization: Bearer <token>
 ]
 ```
 
-A busca usa Places API (New), português do Brasil e viés de 50 km em Blumenau. O viés não exclui locais fora da área. Erros do Google ou falta de chave retornam 502.
-Ao mostrar sugestões sem mapa, o frontend deve exibir a atribuição exigida pelo Google Places.
+A busca usa Places API (New), português do Brasil e viés de 50 km em Blumenau. O viés não exclui locais fora da área. Erros do Google ou falta de chave retornam `502`. Ao mostrar sugestões sem mapa, o frontend deve exibir a atribuição exigida pelo Google Places.
 
----
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
 
 ## Exemplos de uso
 
@@ -334,7 +390,7 @@ Content-Type: application/json
 {
   "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
   "tokenType": "Bearer",
-  "expiresIn": 900000,
+  "expiresIn": 7200,
   "user": {
     "id": 1,
     "name": "Ana",
@@ -349,7 +405,7 @@ Content-Type: application/json
 
 ### Criar evento
 
-O `placeId` vem de `GET /locations/autocomplete`, usando a chave do Google somente no backend.
+O `placeId` vem de `GET /locations/autocomplete`. A chave do Google fica somente no backend.
 
 ```http
 POST /events
@@ -371,16 +427,16 @@ Content-Type: application/json
 ```
 
 | Campo         | Obrigatório | Observação                              |
-|---------------|-------------|-----------------------------------------|
-| `title`       | ✅           |                                         |
+|---------------|:-----------:|-----------------------------------------|
+| `title`       | &#10003;    |                                         |
 | `description` |             |                                         |
-| `eventDate`   | ✅           | `yyyy-MM-dd`, não pode estar no passado |
-| `startTime`   | ✅           | `HH:mm`                                 |
+| `eventDate`   | &#10003;    | `yyyy-MM-dd`, não pode estar no passado |
+| `startTime`   | &#10003;    | `HH:mm`                                 |
 | `endTime`     |             | Precisa ser depois de `startTime`       |
-| `price`       | ✅           | `0` para gratuito                       |
-| `ageRating`   | ✅           | Ver enum `AgeRating`                    |
+| `price`       | &#10003;    | `0` para gratuito                       |
+| `ageRating`   | &#10003;    | Ver enum `AgeRating`                    |
 | `status`      |             | Padrão `DRAFT`                          |
-| `placeId`     | ✅           | `placeId` do Google Places              |
+| `placeId`     | &#10003;    | `placeId` do Google Places              |
 | `categoryId`  |             | Id de uma categoria existente           |
 
 Resposta (`201 Created`):
@@ -395,6 +451,7 @@ Resposta (`201 Created`):
   "endTime": "23:59:00",
   "price": 0,
   "status": "PUBLISHED",
+  "ended": false,
   "ageRating": "FREE",
   "user": {
     "id": 1,
@@ -448,8 +505,7 @@ GET /events/1/nearby
 ]
 ```
 
-Premium filtrando por tipo (`restaurant`, `cafe`, `bar`, `bakery`, `tourist_attraction` ou `park`,
-conforme `goup.google.places.nearby-types`):
+Premium filtrando por tipo (`restaurant`, `cafe`, `bar`, `bakery`, `tourist_attraction` ou `park`, conforme `goup.google.places.nearby-types`):
 
 ```http
 GET /events/1/nearby?type=bar
@@ -476,7 +532,7 @@ Authorization: Bearer <token>
 ]
 ```
 
-### Descoberta Mágica
+### Descoberta Mágica (Premium)
 
 ```http
 POST /discovery
@@ -500,8 +556,8 @@ Content-Type: application/json
 ```
 
 | Campo     | Obrigatório | Observação                                |
-|-----------|-------------|-------------------------------------------|
-| `message` | ✅           | Até 500 caracteres                        |
+|-----------|:-----------:|-------------------------------------------|
+| `message` | &#10003;    | Até 500 caracteres                        |
 | `city`    |             | Filtra os candidatos pela cidade do local |
 
 ### Favoritos
@@ -512,7 +568,9 @@ DELETE /events/1/favorite      → 204 No Content
 GET    /users/me/favorites     → [ { "favoritedAt": "...", "event": { ... } } ]
 ```
 
----
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
 
 ## Regras de negócio
 
@@ -521,40 +579,38 @@ GET    /users/me/favorites     → [ { "favoritedAt": "...", "event": { ... } } 
 - Existe um único tipo de conta, com papel `USER` ou `ADMIN`. Não há perfil de organizador separado.
 - Qualquer usuário logado pode criar eventos.
 - O `USER` edita e exclui só os **próprios** eventos. O `ADMIN` edita e exclui qualquer evento.
-    - Evento de outro usuário → **403**.
-    - Evento inexistente → **404**.
-- O visitante (sem login) pode listar e ver eventos, ver categorias, ver locais e ver locais próximos.
-- Exigem login: criar, editar e excluir eventos, favoritar, `/users/me/**`, resolver locais e a Descoberta Mágica.
+    - Evento de outro usuário: **403**.
+    - Evento inexistente: **404**.
+- O visitante (sem login) pode listar e ver eventos, categorias, locais e locais próximos.
+- Exigem login: criar, editar e excluir eventos, favoritar, `/users/me/**`, autocomplete e resolução de locais e a Descoberta Mágica.
 
 ### Planos (Free e Premium)
 
 - O plano é só o atributo booleano `premium` do usuário. Não há tabela nem entidade de plano.
-- Novos usuários são Free. Premium é definido direto no banco; não existe endpoint de compra nem de troca de plano. A
-  tela de pagamento do frontend é apenas demonstrativa.
-- Free e Premium usam **as mesmas rotas e telas**. O backend identifica o usuário pelo token, lê `premium` no banco e
-  aplica a regra:
+- Novos usuários são Free. Premium é definido direto no banco: não existe endpoint de compra nem de troca de plano. A tela de pagamento do frontend é apenas demonstrativa.
+- Free e Premium usam **as mesmas rotas e telas**. O backend identifica o usuário pelo token, lê `premium` no banco e aplica a regra:
 
 | Recurso                                     | Free / visitante | Premium |
-|---------------------------------------------|------------------|---------|
-| Pesquisa e filtros de eventos               | ✅                | ✅       |
+|---------------------------------------------|:----------------:|:-------:|
+| Pesquisa e filtros de eventos               | &#10003;         | &#10003; |
 | Locais próximos (`/events/{id}/nearby`)     | até 3            | até 10  |
-| Distância, preço e avaliação dos locais     | ✅                | ✅       |
-| Filtro por tipo de lugar (`?type=`)         | 403              | ✅       |
-| Eventos em alta (`?sort=popular`)           | 403              | ✅       |
-| Descoberta Mágica (`POST /discovery`)       | 403              | ✅       |
-| Recomendações (`/users/me/recommendations`) | 403              | ✅       |
+| Distância, preço e avaliação dos locais     | &#10003;         | &#10003; |
+| Filtro por tipo de lugar (`?type=`)         | 403              | &#10003; |
+| Eventos em alta (`?sort=popular`)           | 403              | &#10003; |
+| Descoberta Mágica (`POST /discovery`)       | 403              | &#10003; |
+| Recomendações (`/users/me/recommendations`) | 403              | &#10003; |
 
-- Recurso exclusivo acessado por Free responde **403** com a mensagem `"Recurso exclusivo do GoUp Premium"`. Esconder o
-  botão no frontend não é a proteção: a verificação é feita no backend.
+- Recurso exclusivo acessado por Free responde **403** com a mensagem `"Recurso exclusivo do GoUp Premium"`. Esconder o botão no frontend não é a proteção: a verificação é feita no backend.
 - A regra é sempre `premium = true`, nunca um e-mail específico.
 
 ### Eventos
 
 - Status padrão: `DRAFT` (rascunho).
-- Rascunhos não aparecem na listagem pública. Só o dono e o ADMIN conseguem abri-los; para os demais, a resposta é 404.
-- Um evento terminou se o status é `FINISHED` ou se, no fuso `America/Sao_Paulo`, a data já passou. No dia do evento, ele termina quando a hora atual alcança `endTime`; sem `endTime`, termina no dia seguinte.
-- `GET /events`, descoberta e recomendações excluem eventos terminados. `GET /events/{id}`, `GET /users/me/events` e `GET /users/me/favorites` continuam mostrando os eventos acessíveis, com `ended: true` no `EventResponse` quando terminados.
+- Rascunhos não aparecem na listagem pública. Só o dono e o ADMIN conseguem abri-los; para os demais, a resposta é `404`.
 - A data não pode estar no passado, e o horário de término precisa ser depois do de início.
+- Um evento terminou se o status é `FINISHED` ou se, no fuso `America/Sao_Paulo`, a data já passou. No dia do evento, ele termina quando a hora atual alcança `endTime`; sem `endTime`, termina no dia seguinte.
+- `GET /events`, a Descoberta Mágica e as recomendações excluem eventos terminados.
+- `GET /events/{id}`, `GET /users/me/events` e `GET /users/me/favorites` continuam mostrando os eventos acessíveis, com `ended: true` no `EventResponse` quando terminados.
 
 ### Locais
 
@@ -575,8 +631,7 @@ GET    /users/me/favorites     → [ { "favoritedAt": "...", "event": { ... } } 
 
 ### Descoberta Mágica
 
-1. O backend busca os candidatos: eventos `PUBLISHED` ainda não terminados, filtrados pela cidade (se informada),
-   até 20.
+1. O backend busca os candidatos: eventos `PUBLISHED` ainda não terminados, filtrados pela cidade (se informada), até 20.
 2. Só esses eventos são enviados ao Gemini.
 3. O Gemini responde `{ eventIds, summary }` em JSON.
 4. Qualquer id fora da lista de candidatos é descartado. A IA nunca devolve evento inventado.
@@ -587,25 +642,24 @@ GET    /users/me/favorites     → [ { "favoritedAt": "...", "event": { ... } } 
 
 - Exclusivas do Premium.
 - Consideram eventos `PUBLISHED` de hoje em diante, sem os já favoritados e sem os criados pelo próprio usuário.
-- Pontuação: categorias que o usuário mais favorita pesam mais, depois as cidades. Empates seguem a data. Sem favoritos,
-  viram os próximos eventos da agenda.
+- Pontuação: categorias que o usuário mais favorita pesam mais, depois as cidades. Empates seguem a data. Sem favoritos, viram os próximos eventos da agenda.
 - Até 10 eventos, cada um com o motivo da recomendação.
 
 ### Locais próximos
 
 - Free (e visitante) recebe no máximo **3** lugares; Premium recebe até **10**. Os limites são configuráveis.
-- O backend faz uma única busca no Google com o limite do Premium e corta conforme o plano, então os dois planos
-  compartilham o mesmo cache e a mesma chamada.
+- O backend faz uma única busca no Google com o limite do Premium e corta conforme o plano, então os dois planos compartilham o mesmo cache e a mesma chamada.
 - Cada lugar vem com distância, avaliação, número de avaliações e faixa de preço (quando o Google informa).
 - O próprio local do evento é excluído do resultado.
-- O resultado é guardado em cache por local (e tipo, quando filtrado) enquanto a aplicação está rodando.
+- O resultado fica em cache por local (e tipo, quando filtrado) enquanto a aplicação está rodando.
 
----
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
 
 ## Erros
 
-Os erros tratados pela API seguem o formato abaixo. As exceções são o `401` de rota protegida sem token, que volta sem
-corpo, e o `405`, que usa o formato padrão do Spring.
+Os erros tratados pela API seguem o formato abaixo. As exceções são o `401` de rota protegida sem token, que volta sem corpo, e o `405`, que usa o formato padrão do Spring.
 
 ```json
 {
@@ -631,7 +685,9 @@ corpo, e o `405`, que usa o formato padrão do Spring.
 | `409`  | Conflito (ex.: e-mail já cadastrado)                                                               |
 | `502`  | Falha no Google Places ou no Gemini, ou chave não configurada                                      |
 
----
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
 
 ## Integrações externas
 
@@ -659,14 +715,60 @@ Usada na Descoberta Mágica.
 2. Defina a variável `GEMINI_API_KEY`.
 3. O modelo pode ser trocado em `goup.gemini.model`.
 
----
+<div align="center">
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+</div>
 
-## Próximos passos
+<h2 align="center">&#9679; Equipe</h2>
 
-- [x] Configurar CORS para o frontend
-- [ ] Escrever testes automatizados (services e controllers)
-- [ ] Documentar a API com OpenAPI/Swagger
-- [x] Mover o segredo do JWT e as credenciais do banco para variáveis de ambiente
-- [ ] Usar migrations com Flyway no lugar de `ddl-auto=update`
-- [ ] Paginação em `GET /events`
-- [ ] Dockerfile e `docker-compose` para subir a API junto com o MySQL
+<table align="center">
+  <tr>
+    <td align="center" width="25%">
+      <a href="https://github.com/LucasMaxHartmann">
+        <img src="https://github.com/LucasMaxHartmann.png?size=200" width="100" style="border-radius:50%" alt="Foto de Lucas Max Hartmann"><br>
+        <b>Lucas Max Hartmann</b>
+      </a><br>
+      <sub>Líder</sub>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://github.com/JenniferReetz">
+        <img src="https://github.com/JenniferReetz.png?size=200" width="100" style="border-radius:50%" alt="Foto de Jennifer Reetz"><br>
+        <b>Jennifer Reetz</b>
+      </a><br>
+      <sub>Logo, backend e<br>regras de negócio</sub>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://github.com/StefanieReetz">
+        <img src="https://github.com/StefanieReetz.png?size=200" width="100" style="border-radius:50%" alt="Foto de Stefanie Reetz"><br>
+        <b>Stefanie Reetz</b>
+      </a><br>
+      <sub>Backend e<br>integrações externas</sub>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://github.com/fehhy-droid">
+        <img src="https://github.com/fehhy-droid.png?size=200" width="100" style="border-radius:50%" alt="Foto de Fernanda"><br>
+        <b>Fernanda</b>
+      </a><br>
+      <sub>Frontend e<br>idealização do GoUp</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <a href="https://github.com/GoUp-Events/GoUp-Events-Backend/graphs/contributors"><img src="https://contrib.rocks/image?repo=GoUp-Events/GoUp-Events-Backend" alt="Contribuidores do backend"></a>
+</p>
+
+<div align="center">
+<br>
+<img src="https://raw.githubusercontent.com/GoUp-Events/.github/main/profile/assets/divisor.svg" width="100%" height="6" alt="">
+<br><br>
+
+<b>GoUp</b> &nbsp;&#9679;&nbsp; Blumenau - SC &nbsp;&#9679;&nbsp; &#169; 2026<br>
+<sub>Projeto final &mdash; SENAC Entra21</sub><br><br>
+
+<a href="https://goup-events.lovable.app/">Site</a> &nbsp;&#9670;&nbsp;
+<a href="https://www.youtube.com/@GoUp.Events">YouTube</a> &nbsp;&#9670;&nbsp;
+<a href="https://github.com/GoUp-Events/goup-events">Frontend</a> &nbsp;&#9670;&nbsp;
+<a href="https://github.com/GoUp-Events">Organização</a>
+
+</div>
